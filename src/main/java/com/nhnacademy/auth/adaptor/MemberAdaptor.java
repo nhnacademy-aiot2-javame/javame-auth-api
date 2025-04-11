@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "MEMBER-API")
 public interface MemberAdaptor {
 
-    @PostMapping
+    @PostMapping("/api/v1/members")
     ResponseEntity<MemberResponse> registerMember(@Validated @RequestBody MemberRegisterResponse memberRegisterResponse);
 
     @GetMapping("/{member-id}")

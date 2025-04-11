@@ -7,7 +7,6 @@ import com.nhnacademy.auth.dto.MemberRegisterResponse;
 import com.nhnacademy.auth.dto.RefreshIssuer;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,14 +16,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
-import java.net.URI;
-
 /**
  *  login, logout, signup 을 당담하는 Controller입니다.
  */
 @RestController
-@RequestMapping("/register")
+@RequestMapping("/auth")
+
 public class AuthController {
     /**
      * 회원가입 및 회원 정보 요청을 위임하는 Adaptor.
@@ -62,7 +59,7 @@ public class AuthController {
      * @param registerRequest 회원가입 요청 DTO
      * @return 리다이렉트 응답
      */
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest registerRequest) {
         String encodedPassword = passwordEncoder.encode(registerRequest.getMemberPassword());
 
@@ -76,14 +73,16 @@ public class AuthController {
                 registerRequest.getMemberSex()
         );
 
-        memberAdaptor.registerMember(encodeRequest);
+        try {
+            // MemberAdaptor를 통해 Member API의 회원가입 호출
+            memberAdaptor.registerMember(encodeRequest);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("https://javame.live/auth/login"));
-
-        return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
-                .headers(headers)
-                .build();
+            // 성공 시 HTTP 201 Created 반환 (리다이렉트 대신)
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (Exception e) { // 예: FeignException (Member API 호출 실패 등)
+            // 적절한 에러 로깅 및 에러 응답 반환 (예: 400, 409, 500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 //    @PostMapping("/auth/logout")
