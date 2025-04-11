@@ -160,6 +160,6 @@ buildNumber.properties
 .classpath
 
 # 실제 properties 파일은 무시.
-application.properties
+#application.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/java,maven,intellij

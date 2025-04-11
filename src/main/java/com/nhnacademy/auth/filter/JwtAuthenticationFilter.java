@@ -31,10 +31,24 @@ import java.util.Map;
  */
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
+    /**
+     * 로그 lombok 이 되지 않아 사용.
+     */
     private final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
+    /**
+     * custom한 MemberDetail 및 service를 넣어주기 위한 authenticationManager.
+     */
     private final AuthenticationManager authenticationManager;
+
+    /**
+     * Jwt 발급하는 provider.
+     */
     private final JwtTokenProvider jwtTokenProvider;
+
+    /**
+     *  request 에서 받아온 요청값을 json형태로 바꿀 objectMapper.
+     */
     private final ObjectMapper objectMapper;
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
@@ -56,8 +70,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             );
             return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 
-        }catch (Exception e){
-            throw new AuthenticationFailedException(e.getMessage());
+        } catch (Exception e) {
+            throw new AuthenticationFailedException (e.getMessage());
         }
     }
 

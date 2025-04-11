@@ -7,6 +7,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 public class MemberDetailService implements UserDetailsService {
+    /**
+     * 회원 정보를 가져오는 adaptor.
+     */
     private final LoginAdaptor loginAdaptor;
 
     public MemberDetailService(LoginAdaptor loginAdaptor) {
@@ -16,7 +19,7 @@ public class MemberDetailService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         LoginResponse loginResponse = loginAdaptor.getLoginInfo(username).getBody();
-        if(loginResponse == null){
+        if (loginResponse == null) {
             throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
         }
         return new MemberDetails(loginResponse);

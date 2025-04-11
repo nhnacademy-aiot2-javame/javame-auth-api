@@ -5,29 +5,54 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class MemberRegisterRequest {
+/**
+ * Front에서 받을 회원 등록 정보에 대한 DTO입니다.
+ */
+public class RegisterRequest {
+
+    /**
+     * 회원 아이디.
+     */
     @NotBlank(message = "아이디는 필수 입력 항목입니다.")
     private final String memberId;
 
+    /**
+     * 회원 이름.
+     */
     @NotBlank(message = "이름은 필수 입력 항목입니다.")
     @Size(min = 2, max = 4, message = "이름은 2자 이상 4자 이하로 입력해 주세요.")
     private final String memberName;
 
+    /**
+     * 회원 비밀번호.
+     * 영어 대소문자 및 특수문자를 포함해야 합니다.
+     */
     @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
-    @Size(min = 10, max = 20,  message = "비밀번호는 10자 이상 20자 이하로 입력해주세요.")
+    @Size(min = 10, max = 20, message = "비밀번호는 10자 이상 20자 이하로 입력해주세요.")
     @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{10,}$\n",
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\\-="
+                    + "\\[\\]{};':\"\\\\|,.<>\\/?]).{10,}$",
             message = "비밀번호는 최소 10자리 이상, 영어 대소문자 + 특수문자 포함"
     )
     private final String memberPassword;
 
+    /**
+     * 회원 이메일.
+     */
     @Email(message = "유효한 이메일 주소를 입력해 주세요")
     @NotBlank(message = "이메일은 필수 입력 항목입니다.")
     private final String memberEmail;
 
+    /**
+     * 회원 생년월일.
+     */
     @NotBlank(message = "생년월일은 필수 입력 항목입니다.")
     private final String memberBirth;
 
+    /**
+     * 회원 연락처.
+     * 형식: 01X-XXXX-XXXX
+     */
     @NotBlank(message = "전화번호는 필수 입력 항목입니다.")
     @Pattern(
             regexp = "^01[0-9]-\\d{3,4}-\\d{4}$",
@@ -35,10 +60,26 @@ public class MemberRegisterRequest {
     )
     private final String memberMobile;
 
+    /**
+     * 회원 성별.
+     */
     @NotBlank(message = "성별은 필수 입력 항목입니다.")
     private final String memberSex;
 
-    public MemberRegisterRequest(String memberId, String memberName, String memberPassword, String memberEmail, String memberBirth, String memberMobile, String memberSex) {
+    /**
+     * 회원 등록 요청 생성자.
+     *
+     * @param memberId      회원 아이디
+     * @param memberName    회원 이름
+     * @param memberPassword 회원 비밀번호
+     * @param memberEmail   회원 이메일
+     * @param memberBirth   회원 생년월일
+     * @param memberMobile  회원 연락처
+     * @param memberSex     회원 성별
+     */
+    public RegisterRequest(String memberId, String memberName, String memberPassword,
+                           String memberEmail, String memberBirth,
+                           String memberMobile, String memberSex) {
         this.memberId = memberId;
         this.memberName = memberName;
         this.memberPassword = memberPassword;
@@ -74,5 +115,18 @@ public class MemberRegisterRequest {
 
     public String getMemberSex() {
         return memberSex;
+    }
+
+    @Override
+    public String toString() {
+        return "RegisterRequest{" +
+                "memberId='" + memberId + '\'' +
+                ", memberName='" + memberName + '\'' +
+                ", memberPassword='" + memberPassword + '\'' +
+                ", memberEmail='" + memberEmail + '\'' +
+                ", memberBirth='" + memberBirth + '\'' +
+                ", memberMobile='" + memberMobile + '\'' +
+                ", memberSex='" + memberSex + '\'' +
+                '}';
     }
 }

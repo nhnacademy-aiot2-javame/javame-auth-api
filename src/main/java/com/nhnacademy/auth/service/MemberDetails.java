@@ -12,6 +12,9 @@ import java.util.Collections;
 @Slf4j
 public class MemberDetails implements UserDetails {
 
+    /**
+     *  서버 내부끼리 통신하는 LoginAdaptor를 통해 받은 id, pw, role 이 있는 dto 입니다.
+     */
     private final LoginResponse loginResponse;
 
     public MemberDetails(LoginResponse loginResponse) {

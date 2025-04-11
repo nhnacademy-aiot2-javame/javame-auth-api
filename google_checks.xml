@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    
+    <!-- 파일 내 전체 인코딩 설정 -->
+    <property name="charset" value="UTF-8"/>
+
+    <!-- 한 줄 최대 길이: 100자, package/import 줄은 예외 -->
+    <module name="LineLength">
+        <property name="max" value="100"/>
+        <property name="ignorePattern" value="^package.*|^import.*"/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- 들여쓰기 규칙: 기본 4칸, case 문도 4칸 들여쓰기 -->
+        <module name="Indentation">
+            <property name="basicOffset" value="4"/> <!-- 기본 들여쓰기 -->
+            <property name="braceAdjustment" value="0"/> <!-- 중괄호 추가 들여쓰기 없음 -->
+            <property name="caseIndent" value="4"/> <!-- switch 문 내 case 들여쓰기 -->
+            <property name="lineWrappingIndentation" value="8"/> <!-- 줄바꿈 시 추가 들여쓰기 -->
+            <property name="tabWidth" value="4"/> <!-- 탭 크기 설정 -->
+        </module>
+
+        <!-- 공백 규칙 -->
+        <module name="WhitespaceAround"/> <!-- 연산자 주변 공백 필수 -->
+        <module name="NoWhitespaceBefore"/> <!-- 세미콜론 앞 공백 금지 -->
+        <module name="EmptyLineSeparator"/> <!-- 클래스, 메서드, 필드 사이에 빈 줄 필요 -->
+
+        <!-- 중괄호 스타일 규칙 -->
+        <module name="LeftCurly">
+            <property name="option" value="eol"/> <!-- 여는 중괄호는 같은 줄에 -->
+        </module>
+        <module name="RightCurly">
+            <property name="option" value="same"/> <!-- 닫는 중괄호는 같은 줄 또는 단독 줄 -->
+        </module>
+
+        <!-- 명명 규칙 -->
+        <module name="MethodName"/> <!-- 메서드는 camelCase 소문자 시작 -->
+        <module name="MemberName"/> <!-- 인스턴스 필드: camelCase -->
+        <module name="ParameterName"/> <!-- 메서드 매개변수: camelCase -->
+        <module name="LocalVariableName"/> <!-- 지역 변수: camelCase -->
+        <module name="StaticVariableName"/> <!-- static 변수: camelCase or UPPER_CASE (상수) -->
+        <module name="TypeName"/> <!-- 클래스/인터페이스/enum 등: PascalCase -->
+
+        <!-- Javadoc 관련 규칙 -->
+        <module name="JavadocType"/> <!-- 클래스/인터페이스에 Javadoc 필요 -->
+        <module name="JavadocMethod"/> <!-- 공개 메서드에 Javadoc 필요 -->
+        <module name="JavadocVariable"/> <!-- 공개 필드에 Javadoc 필요 -->
+        <module name="JavadocStyle"/> <!-- Javadoc 문법 스타일 검사 -->
+
+        <!-- 빈 코드 블록 금지 -->
+        <module name="EmptyBlock">
+            <property name="option" value="text"/> <!-- 중괄호만 있고 내용 없는 블록 허용 안 함 -->
+        </module>
+
+        <!-- switch 문에는 default 필수 -->
+        <module name="MissingSwitchDefault"/>
+
+        <!-- import 관련 검사 -->
+        <module name="AvoidStarImport"/> <!-- * import 금지 -->
+        <module name="UnusedImports"/> <!-- 사용되지 않는 import 금지 -->
+        <module name="RedundantImport"/> <!-- 중복 import 금지 -->
+    </module>
+
+    <!-- 파일 끝에 빈 줄 1개 필수 -->
+    <module name="NewlineAtEndOfFile"/>
+
+</module>
+

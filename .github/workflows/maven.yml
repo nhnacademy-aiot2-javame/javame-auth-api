@@ -50,3 +50,8 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script_stop: true
           script: "auth/startup.sh"
+
+    - name: Build with Maven
+      run: |
+        export JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+        mvn -B package --file pom.xml
