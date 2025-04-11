@@ -62,7 +62,7 @@ public class AuthController {
      * @param registerRequest 회원가입 요청 DTO
      * @return 리다이렉트 응답
      */
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest registerRequest) {
         String encodedPassword = passwordEncoder.encode(registerRequest.getMemberPassword());
 
