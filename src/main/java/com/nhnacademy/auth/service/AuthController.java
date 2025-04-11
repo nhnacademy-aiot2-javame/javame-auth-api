@@ -24,7 +24,7 @@ import java.net.URI;
  *  login, logout, signup 을 당담하는 Controller입니다.
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/register")
 public class AuthController {
     /**
      * 회원가입 및 회원 정보 요청을 위임하는 Adaptor.
@@ -62,7 +62,7 @@ public class AuthController {
      * @param registerRequest 회원가입 요청 DTO
      * @return 리다이렉트 응답
      */
-    @PostMapping("/register")
+    @PostMapping()
     public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest registerRequest) {
         String encodedPassword = passwordEncoder.encode(registerRequest.getMemberPassword());
 
