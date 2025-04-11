@@ -3,6 +3,7 @@ package com.nhnacademy.auth.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
+import jakarta.ws.rs.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,11 +55,14 @@ public class SecurityConfig {
                     requests
                             .requestMatchers(
                                     "/auth/login",
-                                    "/auth/signup"
+                                    "/auth/signup",
+                                    "/register",
+                                    "/auth/register",
+                                    HttpMethod.POST,"/auth/register"
                             ).permitAll()
                             .anyRequest().authenticated(); // 나머지 요청은 인증이 필요
                 })
-                .cors(Customizer.withDefaults())
+                .cors(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
@@ -131,17 +135,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:10251")); // 허용할 Origin
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
-        configuration.setAllowCredentials(true); // 쿠키 허용 시 true
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 적용
-        return source;
-    }
 
 }

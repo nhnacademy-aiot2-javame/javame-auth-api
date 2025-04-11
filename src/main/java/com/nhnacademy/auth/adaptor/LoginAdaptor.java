@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 /**
  * 서버끼리만 통신할 때 쓰는 Adaptor. id, pw, role 정보가 들어있습니다.
  */
-@FeignClient(name = "MemberService", url = "http://localhost:10256/api/v1/login")
+@FeignClient(name = "MEMBER-API")
 public interface LoginAdaptor {
     @GetMapping
     ResponseEntity<LoginResponse> getLogin(LoginRequest loginRequest);

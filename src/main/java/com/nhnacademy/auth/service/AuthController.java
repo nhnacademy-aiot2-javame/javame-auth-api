@@ -24,7 +24,7 @@ import java.net.URI;
  *  login, logout, signup 을 당담하는 Controller입니다.
  */
 @RestController
-@RequestMapping("/register")
+@RequestMapping()
 public class AuthController {
     /**
      * 회원가입 및 회원 정보 요청을 위임하는 Adaptor.
@@ -62,7 +62,7 @@ public class AuthController {
      * @param registerRequest 회원가입 요청 DTO
      * @return 리다이렉트 응답
      */
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest registerRequest) {
         String encodedPassword = passwordEncoder.encode(registerRequest.getMemberPassword());
 
@@ -79,7 +79,7 @@ public class AuthController {
         memberAdaptor.registerMember(encodeRequest);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("https://javame.live/auth/login"));
+        headers.setLocation(URI.create("https://localhost:10251/auth/login"));
 
         return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
                 .headers(headers)
