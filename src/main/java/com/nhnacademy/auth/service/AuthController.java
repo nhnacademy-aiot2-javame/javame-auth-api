@@ -24,7 +24,7 @@ import java.net.URI;
  *  login, logout, signup 을 당담하는 Controller입니다.
  */
 @RestController
-@RequestMapping()
+@RequestMapping("/auth")
 public class AuthController {
     /**
      * 회원가입 및 회원 정보 요청을 위임하는 Adaptor.
