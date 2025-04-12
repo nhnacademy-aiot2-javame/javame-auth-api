@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  *  front 에서도 통신할 수 있는 Adaptor.
  */
-@FeignClient(name = "MEMBER-API")
+@FeignClient(name = "MEMBER-API", url = "localhost:10256")
 public interface MemberAdaptor {
 
     @PostMapping()

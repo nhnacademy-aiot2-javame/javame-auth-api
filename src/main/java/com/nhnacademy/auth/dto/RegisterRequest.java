@@ -31,7 +31,6 @@ public class RegisterRequest {
 
     /**
      * 회원 비밀번호.
-     * 영어 대소문자 및 특수문자를 포함해야 합니다.
      */
     @JsonProperty
     @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
@@ -60,7 +59,6 @@ public class RegisterRequest {
 
     /**
      * 회원 연락처.
-     * 형식: 01X-XXXX-XXXX
      */
     @JsonProperty
     @NotBlank(message = "전화번호는 필수 입력 항목입니다.")
@@ -79,19 +77,16 @@ public class RegisterRequest {
 
     /**
      * 회원 등록 요청 생성자.
-     *
-     * @param memberId      회원 아이디
-     * @param memberName    회원 이름
-     * @param memberPassword 회원 비밀번호
-     * @param memberEmail   회원 이메일
-     * @param memberBirth   회원 생년월일
-     * @param memberMobile  회원 연락처
-     * @param memberSex     회원 성별
      */
     @JsonCreator
-    public RegisterRequest(String memberId, String memberName, String memberPassword,
-                           String memberEmail, String memberBirth,
-                           String memberMobile, String memberSex) {
+    public RegisterRequest(
+            @JsonProperty("memberId") String memberId,
+            @JsonProperty("memberName") String memberName,
+            @JsonProperty("memberPassword") String memberPassword,
+            @JsonProperty("memberEmail") String memberEmail,
+            @JsonProperty("memberBirth") String memberBirth,
+            @JsonProperty("memberMobile") String memberMobile,
+            @JsonProperty("memberSex") String memberSex) {
         this.memberId = memberId;
         this.memberName = memberName;
         this.memberPassword = memberPassword;
@@ -99,34 +94,6 @@ public class RegisterRequest {
         this.memberBirth = memberBirth;
         this.memberMobile = memberMobile;
         this.memberSex = memberSex;
-    }
-
-    public String getMemberId() {
-        return memberId;
-    }
-
-    public String getMemberName() {
-        return memberName;
-    }
-
-    public String getMemberPassword() {
-        return memberPassword;
-    }
-
-    public String getMemberEmail() {
-        return memberEmail;
-    }
-
-    public String getMemberBirth() {
-        return memberBirth;
-    }
-
-    public String getMemberMobile() {
-        return memberMobile;
-    }
-
-    public String getMemberSex() {
-        return memberSex;
     }
 
     @Override
