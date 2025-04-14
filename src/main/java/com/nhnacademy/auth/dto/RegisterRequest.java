@@ -2,11 +2,6 @@ package com.nhnacademy.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-
 /**
  * Front에서 받을 회원 등록 정보에 대한 DTO입니다.
  */
@@ -56,6 +51,9 @@ public class RegisterRequest {
     @JsonProperty
     private final String memberSex;
 
+    @JsonProperty
+    private final String roleId;
+
     /**
      * 회원 등록 요청 생성자.
      *
@@ -70,7 +68,7 @@ public class RegisterRequest {
     @JsonCreator
     public RegisterRequest(String memberId, String memberName, String memberPassword,
                            String memberEmail, String memberBirth,
-                           String memberMobile, String memberSex) {
+                           String memberMobile, String memberSex, String roleId) {
         this.memberId = memberId;
         this.memberName = memberName;
         this.memberPassword = memberPassword;
@@ -78,6 +76,7 @@ public class RegisterRequest {
         this.memberBirth = memberBirth;
         this.memberMobile = memberMobile;
         this.memberSex = memberSex;
+        this.roleId = roleId;
     }
 
     public String getMemberId() {
@@ -108,6 +107,10 @@ public class RegisterRequest {
         return memberSex;
     }
 
+    public String getRoleId() {
+        return roleId;
+    }
+
     @Override
     public String toString() {
         return "RegisterRequest{" +
@@ -118,6 +121,7 @@ public class RegisterRequest {
                 ", memberBirth='" + memberBirth + '\'' +
                 ", memberMobile='" + memberMobile + '\'' +
                 ", memberSex='" + memberSex + '\'' +
+                ", roleId='" + roleId + '\'' +
                 '}';
     }
 }

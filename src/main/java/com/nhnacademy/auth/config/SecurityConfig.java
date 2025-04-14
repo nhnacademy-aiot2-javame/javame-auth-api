@@ -3,6 +3,7 @@ package com.nhnacademy.auth.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +25,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity
+@RequiredArgsConstructor
+//(debug = true)
 public class SecurityConfig {
     /**
      * JWT 토큰을 생성, 파싱 및 검증하는 유틸리티 클래스입니다.
@@ -57,7 +60,7 @@ public class SecurityConfig {
                                     "/auth/signup",
                                     "/auth/register",
                                     "/api/auth/register",
-                                    "api/auth/login"
+                                    "/api/auth/login"
                             ).permitAll()
                             .anyRequest().authenticated(); // 나머지 요청은 인증이 필요
                 })
