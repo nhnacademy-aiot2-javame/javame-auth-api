@@ -12,7 +12,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Front에서 받을 회원 등록 정보에 대한 DTO입니다.
  */
-@Getter
 public class RegisterRequest {
 
     /**
