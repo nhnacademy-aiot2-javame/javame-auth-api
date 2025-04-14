@@ -6,25 +6,21 @@ import com.nhnacademy.auth.dto.RegisterRequest;
 import com.nhnacademy.auth.dto.MemberRegisterResponse;
 import com.nhnacademy.auth.dto.RefreshIssuer;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
+import feign.FeignException;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-
-import java.net.URI;
+import org.springframework.web.bind.annotation.*;
 
 /**
  *  login, logout, signup 을 당담하는 Controller입니다.
  */
+@CrossOrigin(origins = "http://localhost:10251")
 @RestController
-@RequestMapping("/register")
+@RequestMapping("/auth")
+@Slf4j
 public class AuthController {
     /**
      * 회원가입 및 회원 정보 요청을 위임하는 Adaptor.
@@ -62,28 +58,47 @@ public class AuthController {
      * @param registerRequest 회원가입 요청 DTO
      * @return 리다이렉트 응답
      */
-    @PostMapping
-    public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest registerRequest) {
-        String encodedPassword = passwordEncoder.encode(registerRequest.getMemberPassword());
+    @PostMapping("/register")
+    public ResponseEntity<Void> signup(@Valid @RequestBody RegisterRequest registerRequest) { // 프론트 -> Auth 로 들어오는 DTO
+        log.info("회원가입 요청 수신: {}", registerRequest.getMemberId()); // 로깅 추가 권장
+        try {
+            // 1. 비밀번호 해싱
+            String encodedPassword = passwordEncoder.encode(registerRequest.getMemberPassword());
 
-        MemberRegisterResponse encodeRequest = new MemberRegisterResponse(
-                registerRequest.getMemberId(),
-                registerRequest.getMemberName(),
-                encodedPassword,
-                registerRequest.getMemberEmail(),
-                registerRequest.getMemberBirth(),
-                registerRequest.getMemberMobile(),
-                registerRequest.getMemberSex()
-        );
+            // 2. MemberAdaptor로 전달할 DTO 생성 (RegisterRequest 타입 사용)
+            //    Auth 서비스의 RegisterRequest 와 Member API의 MemberRegisterRequest 필드가 동일하다고 가정
+            RegisterRequest memberApiRequest = new RegisterRequest( // <<<--- 타입을 RegisterRequest로 변경
+                    registerRequest.getMemberId(),
+                    registerRequest.getMemberName(),
+                    encodedPassword, // 해싱된 비밀번호 사용
+                    registerRequest.getMemberEmail(),
+                    registerRequest.getMemberBirth(),
+                    registerRequest.getMemberMobile(),
+                    registerRequest.getMemberSex(),
+                    registerRequest.getRoleId()
+            );
 
-        memberAdaptor.registerMember(encodeRequest);
+            // 3. MemberAdaptor를 통해 Member API 회원가입 호출
+            log.debug("Member API 회원가입 호출 시작: {}", memberApiRequest.getMemberId());
+            memberAdaptor.registerMember(memberApiRequest); // <<<--- 올바른 타입의 객체 전달
+            log.info("Member API 회원가입 호출 성공: {}", memberApiRequest.getMemberId());
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("https://localhost:10251/auth/login"));
+            // 4. 성공 시 201 Created 응답 반환
+            return ResponseEntity.status(HttpStatus.CREATED).build();
 
-        return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
-                .headers(headers)
-                .build();
+
+        } catch (FeignException fe) { // <<<--- Feign 예외 처리 추가 권장
+            log.error("Member API 호출 실패: status={}, body={}, id={}", fe.status(), fe.contentUTF8(), registerRequest.getMemberId(), fe);
+            if (fe.status() == HttpStatus.CONFLICT.value()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            } else if (fe.status() >= 400 && fe.status() < 500) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            log.error("회원가입 처리 중 알 수 없는 오류 발생: id={}", registerRequest.getMemberId(), e); // <<<--- 로깅 추가 권장
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
 //    @PostMapping("/auth/logout")

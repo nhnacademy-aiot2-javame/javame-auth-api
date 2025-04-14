@@ -1,5 +1,8 @@
 package com.nhnacademy.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 /**
@@ -39,7 +42,11 @@ public class LoginResponse {
      * @param memberPassword 회원 비밀번호
      * @param roleId         회원 역할 ID
      */
-    public LoginResponse(String memberId, String memberPassword, String roleId) {
+    @JsonCreator // <<<--- 이 생성자를 사용하여 객체를 만들도록 Jackson에게 알림
+    public LoginResponse(
+            @JsonProperty("memberId") String memberId,
+            @JsonProperty("memberPassword") String memberPassword,
+            @JsonProperty("roleId") String roleId) {
         this.memberId = memberId;
         this.memberPassword = memberPassword;
         this.roleId = roleId;
