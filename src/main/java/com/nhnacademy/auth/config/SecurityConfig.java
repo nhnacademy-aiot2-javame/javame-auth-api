@@ -3,7 +3,9 @@ package com.nhnacademy.auth.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +60,7 @@ public class SecurityConfig {
                             .requestMatchers(
                                     "/auth/login",
                                     "/auth/signup",
+
                                     "/auth/register",
                                     "/api/auth/register",
                                     "/api/auth/login"
@@ -65,6 +68,7 @@ public class SecurityConfig {
                             .anyRequest().authenticated(); // 나머지 요청은 인증이 필요
                 })
 //                .cors(Customizer.withDefaults())
+
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
@@ -137,6 +141,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+
 //    @Bean
 //    public CorsConfigurationSource corsConfigurationSource() {
 //        CorsConfiguration configuration = new CorsConfiguration();
@@ -149,5 +154,6 @@ public class SecurityConfig {
 //        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 적용
 //        return source;
 //    }
+
 
 }

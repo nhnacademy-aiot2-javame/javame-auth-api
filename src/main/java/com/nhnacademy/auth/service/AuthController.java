@@ -86,6 +86,7 @@ public class AuthController {
             // 4. 성공 시 201 Created 응답 반환
             return ResponseEntity.status(HttpStatus.CREATED).build();
 
+
         } catch (FeignException fe) { // <<<--- Feign 예외 처리 추가 권장
             log.error("Member API 호출 실패: status={}, body={}, id={}", fe.status(), fe.contentUTF8(), registerRequest.getMemberId(), fe);
             if (fe.status() == HttpStatus.CONFLICT.value()) {

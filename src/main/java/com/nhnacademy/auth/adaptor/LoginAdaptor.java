@@ -1,3 +1,4 @@
+
 //package com.nhnacademy.auth.adaptor;
 //
 //import com.nhnacademy.auth.dto.LoginRequest;
@@ -20,3 +21,4 @@
 //    @GetMapping("{/member-id}")
 //    ResponseEntity<LoginResponse> getLoginInfo(@PathVariable("member-id") String memberId);
 //}
+

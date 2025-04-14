@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+
 /**
  *  front 에서도 통신할 수 있는 Adaptor.
  */
 @FeignClient(name = "MEMBER-API")
 public interface MemberAdaptor {
+
 
     /**
      * 사용자 ID를 기반으로 로그인에 필요한 정보(ID, 해싱된 PW, 역할 ID 등)를 조회합니다.
@@ -37,4 +39,5 @@ public interface MemberAdaptor {
      */
     @PostMapping("/api/v1/members") // <<<--- 수정: MemberController의 내부 경로
     ResponseEntity<MemberResponse> registerMember(@RequestBody RegisterRequest request);
+
 }

@@ -1,5 +1,6 @@
 package com.nhnacademy.auth.service;
 
+
 import com.nhnacademy.auth.adaptor.MemberAdaptor; // <<<--- 수정된 어댑터 사용 확인
 import com.nhnacademy.auth.dto.LoginResponse;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j; // <<<--- 로깅 위해 추가
 @Service // <<<--- 스프링 빈으로 등록하기 위해 추가
 @RequiredArgsConstructor // <<<--- final 필드 생성자 자동 생성 (Lombok)
 public class MemberDetailService implements UserDetailsService {
+
 
     // @RequiredArgsConstructor가 생성자 자동 생성
     private final MemberAdaptor memberAdaptor;
@@ -54,6 +56,7 @@ public class MemberDetailService implements UserDetailsService {
         if (loginResponse == null || loginResponse.getMemberId() == null) { // <<<--- loginResponse 또는 주요 필드 null 체크
             log.error("Member API로부터 유효하지 않은 응답 수신: username={}", username);
             throw new UsernameNotFoundException("사용자 정보를 찾을 수 없습니다(Invalid Response): " + username);
+
         }
 
         // 조회된 LoginResponse 객체를 사용하여 MemberDetails 객체 생성 및 반환
