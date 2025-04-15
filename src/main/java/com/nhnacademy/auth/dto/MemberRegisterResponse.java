@@ -32,7 +32,6 @@ public class MemberRegisterResponse {
     private final String memberEmail;
 
     /** 회원 생년월일. */
-    @NotBlank(message = "생년월일은 필수 입력 항목입니다.")
     private final String memberBirth;
 
     /** 회원 휴대폰 번호. */
