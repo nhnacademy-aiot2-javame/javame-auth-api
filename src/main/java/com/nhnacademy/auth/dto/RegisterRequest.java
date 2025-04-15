@@ -2,6 +2,7 @@ package com.nhnacademy.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 // import jakarta.validation.constraints.Email;
 // import jakarta.validation.constraints.NotBlank;
