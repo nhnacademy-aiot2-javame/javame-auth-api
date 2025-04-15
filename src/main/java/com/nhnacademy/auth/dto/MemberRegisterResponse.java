@@ -13,30 +13,30 @@ import java.util.Objects;
 public class MemberRegisterResponse {
 
     /** 회원 아이디. */
-    @NotBlank(message = "아이디는 필수 입력 항목입니다.")
+//    @NotBlank(message = "아이디는 필수 입력 항목입니다.")
     private final String memberId;
 
     /** 회원 이름. */
-    @NotBlank(message = "이름은 필수 입력 항목입니다.")
+//    @NotBlank(message = "이름은 필수 입력 항목입니다.")
 //    @Size(min = 2, max = 4, message = "이름은 2자 이상 4자 이하로 입력해 주세요.")
     private final String memberName;
 
     /** 회원 비밀번호. */
-    @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
+//    @NotBlank(message = "비밀번호는 필수 입력 항목입니다.")
 //    @Size(min = 10, max = 20, message = "비밀번호는 10자 이상 20자 이하로 입력해주세요.")
     private final String memberPassword;
 
     /** 회원 이메일. */
-    @Email(message = "유효한 이메일 주소를 입력해 주세요")
-    @NotBlank(message = "이메일은 필수 입력 항목입니다.")
+//    @Email(message = "유효한 이메일 주소를 입력해 주세요")
+//    @NotBlank(message = "이메일은 필수 입력 항목입니다.")
     private final String memberEmail;
 
     /** 회원 생년월일. */
-    @NotBlank(message = "생년월일은 필수 입력 항목입니다.")
+//    @NotBlank(message = "생년월일은 필수 입력 항목입니다.")
     private final String memberBirth;
 
     /** 회원 휴대폰 번호. */
-    @NotBlank(message = "전화번호는 필수 입력 항목입니다.")
+//    @NotBlank(message = "전화번호는 필수 입력 항목입니다.")
 //    @Pattern(
 //            regexp = "^01[0-9]-\\d{3,4}-\\d{4}$",
 //            message = "모바일 연락처는 01X-XXXX-XXXX 형식으로 입력해주세요."
@@ -44,7 +44,7 @@ public class MemberRegisterResponse {
     private final String memberMobile;
 
     /** 회원 성별. */
-    @NotBlank(message = "성별은 필수 입력 항목입니다.")
+//    @NotBlank(message = "성별은 필수 입력 항목입니다.")
     private final String memberSex;
 
     /**
