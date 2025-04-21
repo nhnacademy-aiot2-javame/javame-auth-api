@@ -10,11 +10,9 @@ import java.util.Objects;
 public class LoginRequest {
 
     /**
-     * 사용자 아이디.
+     * 사용자 아이디. 여기선 회사의 email 을 나타냅니다.
      * -- GETTER --
      *  사용자 아이디를 반환합니다.
-     *
-
      */
     @JsonProperty("id")
     private String id;
@@ -23,8 +21,6 @@ public class LoginRequest {
      * 사용자 비밀번호.
      * -- GETTER --
      *  사용자 비밀번호를 반환합니다.
-     *
-
      */
     @JsonProperty("password")
     private String password;
@@ -33,6 +29,7 @@ public class LoginRequest {
      * 기본 생성자 (JSON 역직렬화용).
      */
     public LoginRequest() {
+        // 기본 생성자
     }
 
     public String getId() {

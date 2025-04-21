@@ -2,12 +2,14 @@ package com.nhnacademy.auth.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import org.springframework.data.redis.core.RedisHash;
 
 import java.util.Objects;
 
 /**
  * JWT 토큰 정보를 담는 DTO 클래스입니다.
  */
+@RedisHash(value = "token", timeToLive = 604800) //7일
 public class JwtTokenDto {
 
     /**

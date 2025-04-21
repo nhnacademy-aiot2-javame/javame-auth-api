@@ -28,7 +28,6 @@ public class LoginResponse {
      * -- GETTER --
      *  회원 역할 ID를 반환합니다.
      *
-
      */
     private final String roleId;
 

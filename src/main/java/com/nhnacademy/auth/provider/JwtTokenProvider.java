@@ -1,5 +1,7 @@
 package com.nhnacademy.auth.provider;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.dto.JwtTokenDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -8,6 +10,8 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +78,7 @@ public class JwtTokenProvider {
         log.debug("accessToken: {}", accessToken);
 
         String refreshToken = Jwts.builder()
+                .subject(userEmail)
                 .expiration(new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key)
                 .compact();
@@ -81,6 +86,26 @@ public class JwtTokenProvider {
 
         return new JwtTokenDto(KEY_TYPE, accessToken, refreshToken);
     }
+
+    public JwtTokenDto resolveTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (cookies != null) {
+           for (Cookie cookie : cookies) {
+               try {
+                   JwtTokenDto token = objectMapper.readValue(cookie.getValue(), JwtTokenDto.class);
+
+                   if(token.getAccessToken() != null && token.getRefreshToken() != null){
+                       return token;
+                   }
+               } catch (JsonProcessingException ex) {
+                  throw new RuntimeException(ex);
+               }
+           }
+        }
+        return null;
+    }
+
 
     public String getUserEmailFromToken(String accessToken) {
         Claims claims = parseClaims(accessToken);

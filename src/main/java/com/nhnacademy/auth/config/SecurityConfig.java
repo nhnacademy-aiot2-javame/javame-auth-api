@@ -1,15 +1,17 @@
 package com.nhnacademy.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.auth.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
+import com.nhnacademy.auth.service.MemberDetailsService;
 import jakarta.ws.rs.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -18,11 +20,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity(debug = true)
@@ -42,6 +39,8 @@ public class SecurityConfig {
 
     /**
      * Spring Security의 필터 체인을 정의합니다.
+     * csrf보호 기능 해제, 디폴트 로그인, 로그아웃 폼 사용 해제, 세션을 stateless로 설정합니다.
+     * jwtAuthenticationFilter가 기존 UsernamePasswordAuthenticationFilter 필터 자리를 차지해 작동될 수 있도록 합니다.
      *
      * @param http HttpSecurity
      * @return SecurityFilterChain
@@ -78,22 +77,29 @@ public class SecurityConfig {
     /**
      * 인증 매니저 빈 등록.
      *
-     * @param authenticationConfiguration 인증 설정
+     * @param memberDetailsService custom 한 memberDetailsService
+     * @param passwordEncoder bCryptPasswordEncoder
      * @return AuthenticationManager
      * @throws Exception 예외 발생 시
      */
     @Bean
-    public AuthenticationManager authenticationManager
-    (AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager (MemberDetailsService memberDetailsService, PasswordEncoder passwordEncoder) throws Exception {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(memberDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+
+        return new ProviderManager(provider);
+    }
+
+    @Bean
+    public MemberDetailsService memberDetailsService(MemberAdaptor memberAdaptor) {
+        return new MemberDetailsService(memberAdaptor);
     }
 
     /**
      * JWT 인증 필터 빈 등록.
      * @param authenticationManager securityConfig에서 생성되는 manager
      * @return JwtAuthenticationFilter
-     * @throws Exception 예외 발생 시
      */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter
@@ -134,7 +140,5 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
 
 }
