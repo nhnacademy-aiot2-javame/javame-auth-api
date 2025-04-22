@@ -3,6 +3,7 @@ package com.nhnacademy.auth.provider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.dto.JwtTokenDto;
+import com.nhnacademy.auth.exception.TokenNotFoundFromCookie;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -28,11 +29,6 @@ import java.util.Date;
 public class JwtTokenProvider {
     /** 로그가 실행되지 않음. */
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
-
-    /**
-     * JWT 타입 키 값.
-     */
-    private static final String KEY_TYPE = "Bearer";
 
     /**
      * Access Token 유효 시간 (30분).
@@ -84,28 +80,27 @@ public class JwtTokenProvider {
                 .compact();
         log.debug("refreshToken: {}", refreshToken);
 
-        return new JwtTokenDto(KEY_TYPE, accessToken, refreshToken);
+        return new JwtTokenDto(accessToken, refreshToken);
     }
 
     public JwtTokenDto resolveTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        ObjectMapper objectMapper = new ObjectMapper();
+        String accessToken = null;
+        String refreshToken = null;
         if (cookies != null) {
-           for (Cookie cookie : cookies) {
-               try {
-                   JwtTokenDto token = objectMapper.readValue(cookie.getValue(), JwtTokenDto.class);
-
-                   if(token.getAccessToken() != null && token.getRefreshToken() != null){
-                       return token;
-                   }
-               } catch (JsonProcessingException ex) {
-                  throw new RuntimeException(ex);
-               }
-           }
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    accessToken = cookie.getValue();
+                } else if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                }
+            }
+            if (accessToken != null && refreshToken != null) {
+                return new JwtTokenDto(accessToken, refreshToken);
+            }
         }
         return null;
     }
-
 
     public String getUserEmailFromToken(String accessToken) {
         Claims claims = parseClaims(accessToken);

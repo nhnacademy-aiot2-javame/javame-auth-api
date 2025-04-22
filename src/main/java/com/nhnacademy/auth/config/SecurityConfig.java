@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
+import com.nhnacademy.auth.repository.RefreshTokenRepository;
 import com.nhnacademy.auth.service.MemberDetailsService;
 import jakarta.ws.rs.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,11 +44,12 @@ public class SecurityConfig {
      * jwtAuthenticationFilter가 기존 UsernamePasswordAuthenticationFilter 필터 자리를 차지해 작동될 수 있도록 합니다.
      *
      * @param http HttpSecurity
+     * @param refreshTokenRepository refresh token 저장소
      * @return SecurityFilterChain
      * @throws Exception 예외 발생 시
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(requests -> {
@@ -67,7 +69,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterAt(jwtAuthenticationFilter
-                                (http.getSharedObject(AuthenticationManager.class)),
+                                (http.getSharedObject(AuthenticationManager.class), refreshTokenRepository),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -99,13 +101,15 @@ public class SecurityConfig {
     /**
      * JWT 인증 필터 빈 등록.
      * @param authenticationManager securityConfig에서 생성되는 manager
+     * @param refreshTokenRepository JWT refresh token 저장 및 조회하는 repository
      * @return JwtAuthenticationFilter
      */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter
-    (AuthenticationManager authenticationManager) {
+    (AuthenticationManager authenticationManager, RefreshTokenRepository refreshTokenRepository) {
         JwtAuthenticationFilter filter =
-                new JwtAuthenticationFilter(authenticationManager,
+                new JwtAuthenticationFilter(refreshTokenRepository,
+                        authenticationManager,
                         jwtTokenProvider(),
                         objectMapper());
         filter.setAuthenticationManager(authenticationManager);

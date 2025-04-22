@@ -16,7 +16,7 @@ public class JwtTokenDto {
      * 토큰 타입 (예: Bearer).
      */
     @JsonProperty("tokenType")
-    private String tokenType;
+    private String tokenType = "Bearer";
 
     /**
      * 액세스 토큰.
@@ -45,12 +45,10 @@ public class JwtTokenDto {
     /**
      * 모든 필드를 초기화하는 생성자입니다.
      *
-     * @param tokenType    토큰 타입
      * @param accessToken  액세스 토큰
      * @param refreshToken 리프레시 토큰
      */
-    public JwtTokenDto(String tokenType, String accessToken, String refreshToken) {
-        this.tokenType = tokenType;
+    public JwtTokenDto(String accessToken, String refreshToken) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }

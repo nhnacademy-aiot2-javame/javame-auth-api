@@ -3,14 +3,18 @@ package com.nhnacademy.auth.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.dto.JwtTokenDto;
 import com.nhnacademy.auth.dto.LoginRequest;
+import com.nhnacademy.auth.dto.RefreshToken;
 import com.nhnacademy.auth.exception.AuthenticationFailedException;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
+import com.nhnacademy.auth.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,7 +28,6 @@ import java.util.Map;
 /**
  * 사용자가 /login을 요청하면 UsernamePasswordAuthenticationFilter가 요청을 가로챔
  * request에서 username&password를 꺼내서 Authentication 객체로 만듦. 우리는 jwt로 인증해야 하므로 JwtAuthenticationFilter를 새로 만듦.
- *
  * UsernamePasswordAuthenticationFilter의 특징으론
  * 인증 요청이 성공/실패 했을 때 별도로 처리하는 로직인 successfulAuthentication, unsuccessfulAuthentication이 실행됨. 그래서 후처리를 위해 구현해야함.
  * 해당 필터는 /login에 접근할 때만 동작한다. => 그렇기 때문에 내가 원하는 Url에서 필터가 동작하길 원한다면 setFilterProcessesUrl()로 Url를 설정해줘야 작동한다.
@@ -32,9 +35,20 @@ import java.util.Map;
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     /**
+     *  redis key 값에 추가할 prefix.
+     */
+    @Value("${token.prefix}")
+    private String tokenPrefix;
+
+    /**
      * 로그 lombok 이 되지 않아 사용.
      */
     private final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    /**
+     * JWT token 발급 후 저장하는 repository.
+     */
+    private final RefreshTokenRepository refreshTokenRepository;
 
     /**
      * custom한 MemberDetail 및 service를 넣어주기 위한 authenticationManager.
@@ -51,7 +65,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      */
     private final ObjectMapper objectMapper;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
+
+    public JwtAuthenticationFilter(RefreshTokenRepository refreshTokenRepository, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
+        this.refreshTokenRepository = refreshTokenRepository;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.objectMapper = objectMapper;
@@ -65,7 +81,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             //request 요청 값에서 id, password가 있어야 함. 그걸 loginRequest.class로 받아올 수 있어야함...
             LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                    loginRequest.getId(),
+                    loginRequest.getEmail(),
                     loginRequest.getPassword()
             );
             return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
@@ -79,6 +95,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(authResult.getName());
+        String redisKey = DigestUtils.sha256Hex(tokenPrefix + ":" + authResult.getName());
+        refreshTokenRepository.save(new RefreshToken(redisKey, jwtTokenDto.getRefreshToken()));
         String result = objectMapper.writeValueAsString(jwtTokenDto);
 
         response.setContentType("application/json");

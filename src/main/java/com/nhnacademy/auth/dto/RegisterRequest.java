@@ -11,7 +11,6 @@ import lombok.Getter;
 /**
  * Front에서 받을 회원 등록 정보에 대한 DTO입니다.
  */
-@Getter
 public class RegisterRequest {
     /** 회사 도메인. */
     @NotBlank(message = "회사 도메인은 필수 입력 항목입니다.")
@@ -72,6 +71,10 @@ public class RegisterRequest {
         this.memberMobile = memberMobile;
     }
 
+    public String getCompanyDomain() {
+        return companyDomain;
+    }
+
     public String getMemberPassword() {
         return memberPassword;
     }
@@ -80,9 +83,6 @@ public class RegisterRequest {
         return memberEmail;
     }
 
-    public String getMemberMobile() {
-        return memberMobile;
-    }
 
     @Override
     public String toString() {

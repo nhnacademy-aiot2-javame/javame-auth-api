@@ -13,8 +13,8 @@ public class LoginRequest {
      * 사용자 아이디. 여기선 회사의 email 을 나타냅니다.
      *  사용자 아이디를 반환합니다.
      */
-    @JsonProperty("id")
-    private String id;
+    @JsonProperty("email")
+    private String email;
 
     /**
      * 사용자 비밀번호.
@@ -30,8 +30,13 @@ public class LoginRequest {
         // 기본 생성자
     }
 
-    public String getId() {
-        return id;
+    public LoginRequest(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public String getPassword() {
@@ -39,21 +44,21 @@ public class LoginRequest {
     }
 
     @Override
-    public String toString() {
-        return "LoginRequest{" +
-                "id='" + id + '\'' +
-                ", password='" + password + '\'' +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object object) {
         if (!(object instanceof LoginRequest that)) return false;
-        return Objects.equals(id, that.id) && Objects.equals(password, that.password);
+        return Objects.equals(email, that.email) && Objects.equals(password, that.password);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, password);
+        return Objects.hash(email, password);
+    }
+
+    @Override
+    public String toString() {
+        return "LoginRequest{" +
+                "email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                '}';
     }
 }

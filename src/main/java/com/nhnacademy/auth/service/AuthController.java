@@ -8,6 +8,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +30,13 @@ import java.net.URI;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    /**
+     *  redis key 값에 추가할 prefix.
+     */
+    @Value("${token.prefix}")
+    private String tokenPrefix;
+
     /**
      * 회원가입 및 회원 정보 요청을 위임하는 Adaptor.
      */
@@ -96,11 +105,12 @@ public class AuthController {
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         JwtTokenDto token = jwtTokenProvider.resolveTokenFromCookie(request); // 쿠키에서 토큰 꺼냄
         String username = jwtTokenProvider.getUserEmailFromToken(token.getAccessToken());
-        refreshTokenRepository.deleteById(passwordEncoder.encode(username)); // Redis or DB에서 삭제
+        refreshTokenRepository.deleteById(DigestUtils.sha256Hex(tokenPrefix + ":" + username)); // Redis or DB에서 삭제
 
         // Cookie 제거
         Cookie expiredCookie = new Cookie("accessToken", null);
-        expiredCookie.setHttpOnly(true);
+        expiredCookie.setHttpOnly(true); //JS 접근 불가.
+        expiredCookie.setSecure(true); //HTTPS 전용
         expiredCookie.setPath("/");
         expiredCookie.setMaxAge(0);
         response.addCookie(expiredCookie);
@@ -112,9 +122,14 @@ public class AuthController {
     public ResponseEntity<JwtTokenDto> refresh(@RequestBody RefreshIssuer refreshIssuer) {
         //gateway가 refresh token을 검증해줬으므로 믿고 사용하겠음.
         String refreshToken = refreshIssuer.getRefreshToken();
-        JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(refreshIssuer.getMemberId());
-        RefreshToken savedToken = new RefreshToken(passwordEncoder.encode(refreshIssuer.getMemberId()), refreshToken);
-        refreshTokenRepository.save(savedToken);
-        return ResponseEntity.ok(jwtTokenDto);
+        if (refreshTokenRepository.existsById(DigestUtils.sha256Hex(tokenPrefix + ":" + refreshIssuer.getMemberId()))) {
+            JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(refreshIssuer.getMemberId());
+            RefreshToken savedToken = new RefreshToken(DigestUtils.sha256Hex(tokenPrefix + ":" + refreshIssuer.getMemberId()), refreshToken);
+            refreshTokenRepository.save(savedToken);
+
+            return ResponseEntity.ok(jwtTokenDto);
+        }
+
+        return ResponseEntity.ok(null);
     }
 }
