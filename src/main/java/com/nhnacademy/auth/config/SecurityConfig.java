@@ -1,15 +1,15 @@
 package com.nhnacademy.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.auth.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
+import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
 import com.nhnacademy.auth.repository.RefreshTokenRepository;
-import com.nhnacademy.auth.service.MemberDetailsService;
-import jakarta.ws.rs.HttpMethod;
+import com.nhnacademy.auth.detail.MemberDetailsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@EnableAsync
 @Configuration
 @EnableWebSecurity(debug = true)
 public class SecurityConfig {
@@ -55,12 +56,17 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> {
                     requests
                             .requestMatchers(
+                                    "/auth/register",
+                                    "/api/v1/auth/login",
                                     "/auth/login",
                                     "/auth/signup",
-                                    "/register",
-                                    "/auth/register",
-                                    HttpMethod.POST,"/auth/register"
-                            ).permitAll()
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/error",
+                                    "/favicon.ico"
+                            )
+                            .permitAll()
                             .anyRequest().authenticated(); // 나머지 요청은 인증이 필요
                 })
                 .cors(AbstractHttpConfigurer::disable)

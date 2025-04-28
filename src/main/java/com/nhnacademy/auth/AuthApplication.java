@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EnableCaching
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.nhnacademy.auth.adaptor")
+@EnableFeignClients(basePackages = "com.nhnacademy.auth")
 public class AuthApplication {
     public static void main(String[] args) {
         SpringApplication.run(AuthApplication.class, args);

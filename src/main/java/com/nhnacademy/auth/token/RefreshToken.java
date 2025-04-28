@@ -1,4 +1,4 @@
-package com.nhnacademy.auth.dto;
+package com.nhnacademy.auth.token;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;

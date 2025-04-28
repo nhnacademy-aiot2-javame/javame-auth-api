@@ -1,8 +1,8 @@
 package com.nhnacademy.auth.repository;
 
 import com.nhnacademy.auth.config.RedisConfig;
-import com.nhnacademy.auth.dto.JwtTokenDto;
-import com.nhnacademy.auth.dto.RefreshToken;
+import com.nhnacademy.auth.token.JwtTokenDto;
+import com.nhnacademy.auth.token.RefreshToken;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.Assertions;
@@ -16,8 +16,6 @@ import org.springframework.boot.test.autoconfigure.data.redis.DataRedisTest;
 import org.springframework.context.annotation.Import;
 
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DataRedisTest
 @Import(RedisConfig.class)
@@ -39,7 +37,7 @@ class RefreshTokenRepositoryTest {
     @DisplayName("Refresh token Redis 저장 및 조회")
     void saveAndFindeRefreshToken(){
         JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(key);
-        JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto("test@test.com");
+        JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto("test@test.com", "ROLE_USER");
         String redisKey = DigestUtils.sha256Hex(tokenPrefix + ":" + "test@test.com");
         log.info("redisKey: {}", redisKey);
         RefreshToken refreshToken = new RefreshToken(redisKey, jwtTokenDto.getRefreshToken());

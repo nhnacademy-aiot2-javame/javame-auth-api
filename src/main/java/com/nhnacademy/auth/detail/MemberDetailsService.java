@@ -1,7 +1,8 @@
-package com.nhnacademy.auth.service;
+package com.nhnacademy.auth.detail;
 
-import com.nhnacademy.auth.adaptor.MemberAdaptor;
-import com.nhnacademy.auth.dto.LoginResponse;
+import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
+import com.nhnacademy.auth.member.response.MemberLoginResponse;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,7 +25,11 @@ public class MemberDetailsService implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        LoginResponse loginResponse = memberAdaptor.getLoginInfo(username).getBody();
+        if (StringUtils.isEmpty(username)) {
+            throw new UsernameNotFoundException(String.format("%s not found.", username));
+        }
+
+        MemberLoginResponse loginResponse = memberAdaptor.getLoginInfoByEmail(username).getBody();
         if (loginResponse == null) {
             throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
         }

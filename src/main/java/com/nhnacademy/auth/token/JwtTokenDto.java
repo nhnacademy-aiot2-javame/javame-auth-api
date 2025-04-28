@@ -1,32 +1,20 @@
-package com.nhnacademy.auth.dto;
+package com.nhnacademy.auth.token;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import org.springframework.data.redis.core.RedisHash;
 
 import java.util.Objects;
 
 /**
  * JWT 토큰 정보를 담는 DTO 클래스입니다.
  */
-@RedisHash(value = "token", timeToLive = 604800) //7일
 public class JwtTokenDto {
-
-    /**
-     * 토큰 타입 (예: Bearer).
-     */
-    @JsonProperty("tokenType")
-    private String tokenType = "Bearer";
-
     /**
      * 액세스 토큰.
-     * -- GETTER --
      *  액세스 토큰을 반환합니다.
      *
      * @return 액세스 토큰
 
      */
-    @Getter
     @JsonProperty("accessToken")
     private String accessToken;
 
@@ -54,15 +42,6 @@ public class JwtTokenDto {
     }
 
     /**
-     * 토큰 타입을 반환합니다.
-     *
-     * @return 토큰 타입
-     */
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    /**
      * AT를 반환합니다.
      * @return AT
      */
@@ -82,25 +61,19 @@ public class JwtTokenDto {
     @Override
     public String toString() {
         return "JwtTokenDto{" +
-                "tokenType='" + tokenType + '\'' +
-                ", accessToken='" + accessToken + '\'' +
+                "accessToken='" + accessToken + '\'' +
                 ", refreshToken='" + refreshToken + '\'' +
                 '}';
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (!(object instanceof JwtTokenDto that)) {
-            return false;
-        }
-
-        return Objects.equals(tokenType, that.tokenType)
-                && Objects.equals(accessToken, that.accessToken)
-                && Objects.equals(refreshToken, that.refreshToken);
+    public boolean equals(Object o) {
+        if (!(o instanceof JwtTokenDto that)) return false;
+        return Objects.equals(accessToken, that.accessToken) && Objects.equals(refreshToken, that.refreshToken);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(tokenType, accessToken, refreshToken);
+        return Objects.hash(accessToken, refreshToken);
     }
 }

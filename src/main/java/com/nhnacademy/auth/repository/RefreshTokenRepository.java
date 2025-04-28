@@ -1,6 +1,6 @@
 package com.nhnacademy.auth.repository;
 
-import com.nhnacademy.auth.dto.RefreshToken;
+import com.nhnacademy.auth.token.RefreshToken;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

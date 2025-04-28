@@ -1,9 +1,12 @@
 package com.nhnacademy.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.auth.dto.JwtTokenDto;
-import com.nhnacademy.auth.dto.LoginRequest;
-import com.nhnacademy.auth.dto.RefreshToken;
+import com.nhnacademy.auth.context.ApplicationContextHolder;
+import com.nhnacademy.auth.detail.MemberDetails;
+import com.nhnacademy.auth.event.LoginSuccessEvent;
+import com.nhnacademy.auth.token.JwtTokenDto;
+import com.nhnacademy.auth.member.request.LoginRequest;
+import com.nhnacademy.auth.token.RefreshToken;
 import com.nhnacademy.auth.exception.AuthenticationFailedException;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
 import com.nhnacademy.auth.repository.RefreshTokenRepository;
@@ -15,14 +18,17 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -66,7 +72,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private final ObjectMapper objectMapper;
 
 
-    public JwtAuthenticationFilter(RefreshTokenRepository refreshTokenRepository, AuthenticationManager authenticationManager, JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
+    public JwtAuthenticationFilter(RefreshTokenRepository refreshTokenRepository, AuthenticationManager authenticationManager,
+                                   JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
@@ -81,8 +88,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             //request 요청 값에서 id, password가 있어야 함. 그걸 loginRequest.class로 받아올 수 있어야함...
             LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                    loginRequest.getEmail(),
-                    loginRequest.getPassword()
+                    loginRequest.getMemberEmail(),
+                    loginRequest.getMemberPassword()
             );
             return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 
@@ -94,10 +101,21 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     //인증 성공 후 jwt 반환
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
-        JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(authResult.getName());
+        MemberDetails memberDetails = (MemberDetails) authResult.getPrincipal();
+
+        List<String> authorities = memberDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        String role = authorities.isEmpty() ? null : authorities.getFirst();
+
+        JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(authResult.getName(), role);
         String redisKey = DigestUtils.sha256Hex(tokenPrefix + ":" + authResult.getName());
         refreshTokenRepository.save(new RefreshToken(redisKey, jwtTokenDto.getRefreshToken()));
         String result = objectMapper.writeValueAsString(jwtTokenDto);
+
+        //로그인 성공 이벤트 발생 -> 최근 로그인 시간 업데이트
+        ApplicationContextHolder.getContext().getBean(ApplicationEventPublisher.class).publishEvent(new LoginSuccessEvent(this, authResult.getName()));
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

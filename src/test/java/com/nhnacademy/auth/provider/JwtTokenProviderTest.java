@@ -1,9 +1,7 @@
 package com.nhnacademy.auth.provider;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.auth.dto.JwtTokenDto;
-import io.jsonwebtoken.Jwts;
+import com.nhnacademy.auth.token.JwtTokenDto;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Assertions;
@@ -18,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest(classes = JwtTokenProvider.class)
 @ExtendWith(MockitoExtension.class)
 class JwtTokenProviderTest {
@@ -30,6 +26,8 @@ class JwtTokenProviderTest {
     private String key;
 
     private final String testEmail = "test@test.com";
+
+    private final String testRole = "ROLE_USER";
 
     private JwtTokenProvider provider;
 
@@ -43,7 +41,7 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("token 생성 테스트")
     void generateTokenDto() {
-        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail);
+        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail, testRole);
 
         log.info("jwtTokenDto: {}", jwtTokenDto);
         Assertions.assertNotNull(jwtTokenDto);
@@ -52,46 +50,53 @@ class JwtTokenProviderTest {
 
     @Test
     @DisplayName("cookie에서 resolveToken 가져오기")
-    void resolveTokenFromCookie() throws JsonProcessingException {
-        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail);
+    void resolveTokenFromCookie() {
+        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail, testRole);
 
         Cookie cookie1 = new Cookie("accessToken", jwtTokenDto.getAccessToken());
-        Cookie cookie2 = new Cookie("refreshToken", jwtTokenDto.getRefreshToken());
-
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
 
-        Mockito.when(request.getCookies()).thenReturn(new Cookie[]{cookie1, cookie2});
+        Mockito.when(request.getCookies()).thenReturn(new Cookie[]{cookie1});
 
-        JwtTokenDto actual = provider.resolveTokenFromCookie(request);
+        String actual = provider.resolveTokenFromCookie(request);
 
         Assertions.assertNotNull(actual);
-        Assertions.assertEquals(jwtTokenDto.getAccessToken(), actual.getAccessToken());
-        Assertions.assertEquals(jwtTokenDto.getRefreshToken(), actual.getRefreshToken());
+        Assertions.assertEquals(jwtTokenDto.getAccessToken(), actual);
     }
 
     @Test
     @DisplayName("cookie에서 resolveToken이 없을 경우 null이 나오는지")
     void resolveTokenFromCookie_notFound() {
-        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail);
-
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
-
         Mockito.when(request.getCookies()).thenReturn(new Cookie[]{});
-
-        JwtTokenDto actual = provider.resolveTokenFromCookie(request);
+        String actual = provider.resolveTokenFromCookie(request);
 
         Assertions.assertNull(actual);
     }
 
 
-
     @Test
     @DisplayName("accesstoken에서 subject에 저장한 userEmail 가져오기 ")
     void getUserEmailFromToken() {
-        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail);
+        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail, testRole);
         String actual = provider.getUserEmailFromToken(jwtTokenDto.getAccessToken());
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(testEmail, actual);
+    }
+
+
+    @Test
+    @DisplayName("accesToken에서 role id 가져오기")
+    void getRoleIdFromTokenTest() {
+        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail, testRole);
+        String accessTokenRole = provider.getRoleIdFromToken(jwtTokenDto.getAccessToken());
+        String refreshTokenRole = provider.getRoleIdFromToken(jwtTokenDto.getRefreshToken());
+
+        Assertions.assertNotNull(accessTokenRole);
+        Assertions.assertNotNull(refreshTokenRole);
+
+        Assertions.assertEquals(testRole, accessTokenRole);
+        Assertions.assertEquals(testRole, refreshTokenRole);
     }
 
 }

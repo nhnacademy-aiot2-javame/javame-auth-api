@@ -1,9 +1,8 @@
 package com.nhnacademy.auth.provider;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nhnacademy.auth.dto.JwtTokenDto;
-import com.nhnacademy.auth.exception.TokenNotFoundFromCookie;
+import com.nhnacademy.auth.exception.GenerateTokenDtoException;
+import com.nhnacademy.auth.exception.MissingTokenException;
+import com.nhnacademy.auth.token.JwtTokenDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -14,6 +13,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,13 +60,21 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public JwtTokenDto generateTokenDto(String userEmail) {
+    public JwtTokenDto generateTokenDto(String userEmail, String userRole) {
+        if (StringUtils.isEmpty(userEmail)) {
+            throw new GenerateTokenDtoException(userEmail);
+        }
+        if (StringUtils.isEmpty(userRole)) {
+            throw new GenerateTokenDtoException(userRole);
+        }
+
         Date now = new Date();
         Date exp = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME); //토큰 만료기간
         log.debug("Expiration Time: {}", exp);
 
         String accessToken = Jwts.builder()
                 .subject(userEmail) // JWT 주체, 사용자 Email
+                .claim("role", userRole)
                 .issuedAt(now)
                 .expiration(exp) // JWT 만료 시간 설정
                 .signWith(key)
@@ -75,6 +83,7 @@ public class JwtTokenProvider {
 
         String refreshToken = Jwts.builder()
                 .subject(userEmail)
+                .claim("role", userRole)
                 .expiration(new Date(now.getTime() + REFRESH_TOKEN_EXPIRE_TIME))
                 .signWith(key)
                 .compact();
@@ -83,28 +92,32 @@ public class JwtTokenProvider {
         return new JwtTokenDto(accessToken, refreshToken);
     }
 
-    public JwtTokenDto resolveTokenFromCookie(HttpServletRequest request) {
+    public String resolveTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        String accessToken = null;
-        String refreshToken = null;
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if ("accessToken".equals(cookie.getName())) {
-                    accessToken = cookie.getValue();
-                } else if ("refreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
+                if (cookie.getName().toLowerCase().contains("token")) {
+                    return cookie.getValue();
                 }
-            }
-            if (accessToken != null && refreshToken != null) {
-                return new JwtTokenDto(accessToken, refreshToken);
             }
         }
         return null;
     }
 
     public String getUserEmailFromToken(String accessToken) {
+        if (StringUtils.isEmpty(accessToken)) {
+            throw new MissingTokenException(accessToken);
+        }
         Claims claims = parseClaims(accessToken);
         return claims.getSubject();
+    }
+
+    public String getRoleIdFromToken(String token) {
+        if (StringUtils.isEmpty(token)) {
+            throw new MissingTokenException(token);
+        }
+        Claims claims = parseClaims(token);
+        return claims.get("role", String.class);
     }
 
     public boolean validateToken(String token) {
@@ -138,7 +151,7 @@ public class JwtTokenProvider {
         }
     }
 
-    public Key getKey() {
+    private Key getKey() {
         return key;
     }
 }
