@@ -1,6 +1,7 @@
 package com.nhnacademy.auth.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.auth.exception.TokenNotFoundFromCookie;
 import com.nhnacademy.auth.token.JwtTokenDto;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,13 +66,26 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    @DisplayName("cookie에서 resolveToken이 없을 경우 null이 나오는지")
-    void resolveTokenFromCookie_notFound() {
+    @DisplayName("cookie가 비어있을 땐 null이 나오는지")
+    void resolveTokenFromCookie_isNull() {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         Mockito.when(request.getCookies()).thenReturn(new Cookie[]{});
         String actual = provider.resolveTokenFromCookie(request);
 
         Assertions.assertNull(actual);
+    }
+
+    @Test
+    @DisplayName("cookie에서 토큰이 없을 때 TokenNotFoundFromCookie Exception 검증.")
+    void resolveTokenFromCookie_notFound() {
+        Cookie cookie1 = new Cookie("type", "Bearer");
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+
+        Mockito.when(request.getCookies()).thenReturn(new Cookie[]{cookie1});
+
+        Assertions.assertThrows(TokenNotFoundFromCookie.class, ()->{
+            provider.resolveTokenFromCookie(request);
+        });
     }
 
 

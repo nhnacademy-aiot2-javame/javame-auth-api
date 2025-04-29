@@ -2,6 +2,7 @@ package com.nhnacademy.auth.provider;
 
 import com.nhnacademy.auth.exception.GenerateTokenDtoException;
 import com.nhnacademy.auth.exception.MissingTokenException;
+import com.nhnacademy.auth.exception.TokenNotFoundFromCookie;
 import com.nhnacademy.auth.token.JwtTokenDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -98,7 +99,7 @@ public class JwtTokenProvider {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().toLowerCase().contains("token")) {
                     return cookie.getValue();
-                }
+                } else throw new TokenNotFoundFromCookie();
             }
         }
         return null;

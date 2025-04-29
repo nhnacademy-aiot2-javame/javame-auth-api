@@ -23,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -31,11 +32,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import com.nhnacademy.auth.context.ApplicationContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @SpringBootTest(classes = AuthApplication.class)
 @ExtendWith(MockitoExtension.class)
@@ -70,6 +72,7 @@ class JwtAuthenticationFilterTest {
     @BeforeEach
     void setUp() {
         authentication = Mockito.mock(Authentication.class);
+        ReflectionTestUtils.setField(jwtAuthenticationFilter, "tokenPrefix", "Bearer");
     }
 
     @Test
@@ -115,6 +118,18 @@ class JwtAuthenticationFilterTest {
 
         Assertions.assertThrows(AuthenticationFailedException.class, () ->
                 jwtAuthenticationFilter.attemptAuthentication(request, response));
+    }
+
+    @Test
+    @DisplayName("attemptAuthentication에서 Json 파싱 실패 시")
+    void attemptAuthentication_throwsAuthenticationFailedException_invalidJson() throws IOException {
+        request = Mockito.mock(HttpServletRequest.class);
+        response = Mockito.mock(HttpServletResponse.class);
+        Mockito.when(request.getInputStream()).thenThrow(new IOException("invalid json"));
+
+        Assertions.assertThrows(AuthenticationFailedException.class, () ->{
+            jwtAuthenticationFilter.attemptAuthentication(request, response);
+        });
     }
 
     @Test
@@ -192,4 +207,6 @@ class JwtAuthenticationFilterTest {
         // 6. response 401 status 설정했는지 검증
         Mockito.verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
+
+
 }
