@@ -28,12 +28,12 @@ public interface MemberAdaptor {
     @DeleteMapping("/members/{memberNo}")
     ResponseEntity<Void> deleteMember(@PathVariable Long memberNo);
 
-    @GetMapping("/login-info/{email}")
+    @GetMapping("/members/login-info/{email}")
     ResponseEntity<MemberLoginResponse> getLoginInfoByEmail(@PathVariable String email);
 
     @GetMapping("/members/member-email")
     ResponseEntity<MemberResponse> getMemberByEmail(@RequestBody String memberEmail);
 
-    @PutMapping("/members/last-login")
-    ResponseEntity<Void> updateLastLogin(@RequestBody String memberEmail);
+    @PutMapping("/members/{email}/last-login")
+    ResponseEntity<Void> updateLastLogin(@PathVariable String email);
 }

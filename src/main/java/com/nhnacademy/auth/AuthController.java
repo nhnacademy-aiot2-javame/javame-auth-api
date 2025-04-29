@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.nio.file.AccessDeniedException;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -100,7 +101,7 @@ public class AuthController {
      * @return 리다이렉트 응답
      */
     @PostMapping("/register")
-    public ResponseEntity<Void> signup(@Valid @RequestBody MemberRegisterRequest request) {
+    public ResponseEntity<Map<String, String>> signup(@Valid @RequestBody MemberRegisterRequest request) {
         String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
 
         MemberRegisterRequest encodeRequest = new MemberRegisterRequest(
@@ -110,13 +111,11 @@ public class AuthController {
 
         memberAdaptor.registerMember(encodeRequest);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("/api/v1/auth/login"));
+        Map<String, String> body = Map.of("message", "회원가입 성공");
 
-        return ResponseEntity.status(HttpStatus.TEMPORARY_REDIRECT)
-                .headers(headers)
-                .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
+
 
     /**
      * 로그아웃 요청을 처리합니다.

@@ -3,7 +3,9 @@ package com.nhnacademy.auth.event;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
+@Component
 public class LoginSuccessEventListener {
 
     /**
@@ -19,6 +21,6 @@ public class LoginSuccessEventListener {
     @EventListener
     public void handleLoginSuccess(LoginSuccessEvent event) {
         String email = event.getMemberEmail();
-        memberAdaptor.updateLastLogin("\"" + email + "\"");
+        memberAdaptor.updateLastLogin(email);
     }
 }

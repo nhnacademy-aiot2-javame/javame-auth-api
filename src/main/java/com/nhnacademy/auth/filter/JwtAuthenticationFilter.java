@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -71,6 +72,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      */
     private final ObjectMapper objectMapper;
 
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
+
 
     public JwtAuthenticationFilter(RefreshTokenRepository refreshTokenRepository, AuthenticationManager authenticationManager,
                                    JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
@@ -115,7 +119,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String result = objectMapper.writeValueAsString(jwtTokenDto);
 
         //로그인 성공 이벤트 발생 -> 최근 로그인 시간 업데이트
-        ApplicationContextHolder.getContext().getBean(ApplicationEventPublisher.class).publishEvent(new LoginSuccessEvent(this, authResult.getName()));
+//        ApplicationContextHolder.getContext().getBean(ApplicationEventPublisher.class).publishEvent(new LoginSuccessEvent(this, authResult.getName()));
+
+        applicationEventPublisher.publishEvent(new LoginSuccessEvent(this, authResult.getName()));
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
