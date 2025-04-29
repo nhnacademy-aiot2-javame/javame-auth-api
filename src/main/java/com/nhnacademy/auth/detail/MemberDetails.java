@@ -1,6 +1,6 @@
-package com.nhnacademy.auth.service;
+package com.nhnacademy.auth.detail;
 
-import com.nhnacademy.auth.dto.LoginResponse;
+import com.nhnacademy.auth.member.response.MemberLoginResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,9 +15,9 @@ public class MemberDetails implements UserDetails {
     /**
      *  서버 내부끼리 통신하는 LoginAdaptor를 통해 받은 id, pw, role 이 있는 dto 입니다.
      */
-    private final LoginResponse loginResponse;
+    private final MemberLoginResponse loginResponse;
 
-    public MemberDetails(LoginResponse loginResponse) {
+    public MemberDetails(MemberLoginResponse loginResponse) {
         this.loginResponse = loginResponse;
     }
 
@@ -34,7 +34,7 @@ public class MemberDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return loginResponse.getMemberId();
+        return loginResponse.getMemberEmail();
     }
 
     @Override
