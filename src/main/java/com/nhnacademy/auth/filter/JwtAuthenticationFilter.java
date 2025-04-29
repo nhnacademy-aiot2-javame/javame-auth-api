@@ -114,8 +114,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String role = authorities.isEmpty() ? null : authorities.getFirst();
 
         JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(authResult.getName(), role);
+        log.debug("--- jwt Token 생성 완료 ---");
         String redisKey = DigestUtils.sha256Hex(tokenPrefix + ":" + authResult.getName());
+        log.debug("--- Redis Key 생성 완료 ---");
         refreshTokenRepository.save(new RefreshToken(redisKey, jwtTokenDto.getRefreshToken()));
+        log.debug("--- Refresh Token 저장 ---");
         String result = objectMapper.writeValueAsString(jwtTokenDto);
 
         //로그인 성공 이벤트 발생 -> 최근 로그인 시간 업데이트
