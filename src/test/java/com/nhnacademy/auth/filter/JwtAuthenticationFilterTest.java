@@ -43,9 +43,6 @@ import java.nio.charset.StandardCharsets;
 class JwtAuthenticationFilterTest {
 
     @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
     private FilterChain filterChain;
 
     @Mock
@@ -71,9 +68,8 @@ class JwtAuthenticationFilterTest {
     private Authentication authentication;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         authentication = Mockito.mock(Authentication.class);
-        // request inputStream 세팅
     }
 
     @Test
