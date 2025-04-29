@@ -40,6 +40,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -74,7 +75,7 @@ class JwtAuthenticationFilterTest {
     @Mock
     private HttpServletResponse response;
 
-    private Authentication authentication;
+    private Authentication authentication = Mockito.mock(Authentication.class);;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -136,20 +137,22 @@ class JwtAuthenticationFilterTest {
     @Test
     @DisplayName("로그인 성공 시.")
     void successfulAuthentication() throws Exception {
-        MemberDetails memberDetails = Mockito.mock(MemberDetails.class);
-
-        // getAuthorities() 메서드를 mock하여 권한 리스트 반환
-        Mockito.doReturn(List.of(new SimpleGrantedAuthority("ROLE_USER")))
-                .when(memberDetails).getAuthorities();
-
         // member 정보 mock 설정
         Long memberNo = 1L;
         String memberEmail = "test@test.com";
         String memberPassword = "password";
         String roleId = "ROLE_USER";
+        MemberLoginResponse loginResponse = new MemberLoginResponse(memberNo, memberEmail, memberPassword, roleId);
+        MemberDetails memberDetails = Mockito.mock(MemberDetails.class);
+        Mockito.doReturn(Collections.singletonList(new SimpleGrantedAuthority(response.getRoleId()))).when(memberDetails.getAuthorities());
+
+        // getAuthorities() 메서드를 mock하여 권한 리스트 반환
+
+        Mockito.doReturn(Collections.singletonList(new SimpleGrantedAuthority(loginResponse.getRoleId()))).when(memberDetails.getAuthorities());
+
+
 
         // authentication 객체를 mock하고, principal로 memberDetails 설정
-        Authentication authentication = Mockito.mock(Authentication.class);
         BDDMockito.given(authentication.getPrincipal()).willReturn(memberDetails);
         BDDMockito.given(authentication.getName()).willReturn(memberEmail);
 
