@@ -2,6 +2,7 @@ package com.nhnacademy.auth;
 
 import com.nhnacademy.auth.company.adaptor.CompanyAdaptor;
 import com.nhnacademy.auth.company.request.CompanyUpdateEmailRequest;
+import com.nhnacademy.auth.company.request.CompanyWithOwnerRegisterRequest;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.member.request.MemberPasswordChangeRequest;
 import com.nhnacademy.auth.member.request.MemberRegisterRequest;
@@ -112,6 +113,33 @@ public class AuthController {
         memberAdaptor.registerMember(encodeRequest);
 
         Map<String, String> body = Map.of("message", "회원가입 성공");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    /**
+     * 회사 등록 및 오너 회원가입 요청을 처리합니다.
+     *
+     * @param request 회원가입 요청 DTO
+     * @return 리다이렉트 응답
+     */
+    @PostMapping("/purchase")
+    public ResponseEntity<Map<String, String>> ownerSignup(@Valid @RequestBody CompanyWithOwnerRegisterRequest request) {
+        String encodedPassword = passwordEncoder.encode(request.getOwnerPassword());
+
+        CompanyWithOwnerRegisterRequest encodeRequest = new CompanyWithOwnerRegisterRequest(
+                request.getCompanyDomain(),
+                request.getCompanyName(),
+                request.getCompanyEmail(),
+                request.getCompanyMobile(),
+                request.getCompanyAddress(),
+                request.getOwnerEmail(),
+                encodedPassword
+        );
+
+        companyAdaptor.registerCompanyWithOwner(encodeRequest);
+
+        Map<String, String> body = Map.of("message", "회사등록 및 오너 등록 성공");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }

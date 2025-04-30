@@ -1,6 +1,8 @@
 package com.nhnacademy.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
@@ -57,6 +59,7 @@ public class SecurityConfig {
                     requests
                             .requestMatchers(
                                     "/auth/register",
+                                    "/auth/purchase",
                                     "/api/v1/auth/login",
                                     "/auth/login",
                                     "/auth/signup",
@@ -138,7 +141,10 @@ public class SecurityConfig {
      */
     @Bean
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return objectMapper;
     }
 
     /**

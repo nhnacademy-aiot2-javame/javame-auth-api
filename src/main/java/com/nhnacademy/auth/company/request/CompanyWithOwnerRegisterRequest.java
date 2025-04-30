@@ -55,9 +55,4 @@ public class CompanyWithOwnerRegisterRequest {
     @JsonProperty
     private String ownerPassword;
 
-    /**
-     * 등록할 회사의 대표 회원 이름.
-     */
-    @JsonProperty
-    private String ownerName;
 }
