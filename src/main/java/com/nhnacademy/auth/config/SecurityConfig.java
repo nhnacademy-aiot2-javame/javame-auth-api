@@ -3,6 +3,7 @@ package com.nhnacademy.auth.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.nhnacademy.auth.exception.entrypoint.CustomAuthenticationEntryPoint;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
@@ -47,7 +48,6 @@ public class SecurityConfig {
      * jwtAuthenticationFilter가 기존 UsernamePasswordAuthenticationFilter 필터 자리를 차지해 작동될 수 있도록 합니다.
      *
      * @param http HttpSecurity
-     * @param customAuthenticationEntryPoint spring Security 인증 관련 예외 처리 로직을 받아 커스텀한 entry point.
      * @param refreshTokenRepository refresh token 저장소
      * @return SecurityFilterChain
      * @throws Exception 예외 발생 시

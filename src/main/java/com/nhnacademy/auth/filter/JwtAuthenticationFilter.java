@@ -1,6 +1,7 @@
 package com.nhnacademy.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.nhnacademy.auth.context.ApplicationContextHolder;
 import com.nhnacademy.auth.detail.MemberDetails;
 import com.nhnacademy.auth.event.LoginSuccessEvent;
