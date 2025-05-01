@@ -1,7 +1,7 @@
 package com.nhnacademy.auth.company.adaptor;
 
-import com.nhnacademy.auth.company.request.CompanyUpdateEmailRequest;
 import com.nhnacademy.auth.company.request.CompanyRegisterRequest;
+import com.nhnacademy.auth.company.request.CompanyUpdateEmailRequest;
 import com.nhnacademy.auth.company.response.CompanyResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;

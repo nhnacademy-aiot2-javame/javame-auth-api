@@ -28,9 +28,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
+import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 
 /**
@@ -114,6 +113,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 
+    /**
+     * 회원가입 요청을 처리합니다.
+     *
+     * @param request 회원가입 요청 DTO
+     * @return 리다이렉트 응답
+     */
     @PostMapping("/register-owner")
     public ResponseEntity<Map<String, String>> signupOwner(@Valid @RequestBody MemberRegisterRequest request) {
         String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
@@ -129,6 +134,7 @@ public class AuthController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
+
 
     /**
      * 로그아웃 요청을 처리합니다.
