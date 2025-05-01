@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompanyWithOwnerRegisterRequest {
+public class CompanyRegisterRequest {
 
     /**
      * 등록할 회사의 고유 도메인 (기본키).
@@ -42,17 +42,5 @@ public class CompanyWithOwnerRegisterRequest {
      */
     @JsonProperty
     private String companyAddress;
-
-    /**
-     * 등록할 회사의 대표 회원 이메일.
-     */
-    @JsonProperty
-    private String ownerEmail;
-
-    /**
-     * 등록할 회사의 대표 회원 비밀번호.
-     */
-    @JsonProperty
-    private String ownerPassword;
 
 }
