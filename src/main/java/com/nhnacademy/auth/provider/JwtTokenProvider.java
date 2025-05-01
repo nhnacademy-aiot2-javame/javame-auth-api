@@ -152,7 +152,4 @@ public class JwtTokenProvider {
         }
     }
 
-    private Key getKey() {
-        return key;
-    }
 }

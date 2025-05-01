@@ -1,7 +1,7 @@
 package com.nhnacademy.auth.company.adaptor;
 
+import com.nhnacademy.auth.company.request.CompanyRegisterRequest;
 import com.nhnacademy.auth.company.request.CompanyUpdateEmailRequest;
-import com.nhnacademy.auth.company.request.CompanyWithOwnerRegisterRequest;
 import com.nhnacademy.auth.company.response.CompanyResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import java.util.List;
 public interface CompanyAdaptor {
 
     @PostMapping("/companies")
-    ResponseEntity<CompanyResponse> registerCompanyWithOwner(@Validated @RequestBody CompanyWithOwnerRegisterRequest request);
+    ResponseEntity<CompanyResponse> registerCompany(@Validated @RequestBody CompanyRegisterRequest request);
 
     @GetMapping("/companies/{companyDomain}")
     ResponseEntity<CompanyResponse> getCompanyByDomain(@PathVariable String companyDomain);

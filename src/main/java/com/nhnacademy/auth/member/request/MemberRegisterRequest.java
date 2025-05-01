@@ -13,6 +13,11 @@ import lombok.NoArgsConstructor;
 public class MemberRegisterRequest {
 
     /**
+     * 회사 도메인.
+     */
+    private String companyDomain;
+
+    /**
      * 이메일.
      */
     private String memberEmail;
@@ -21,10 +26,4 @@ public class MemberRegisterRequest {
      * 비밀번호.
      */
     private String memberPassword;
-
-    /**
-     * 회사 도메인.
-     */
-    private String companyDomain;
-
 }

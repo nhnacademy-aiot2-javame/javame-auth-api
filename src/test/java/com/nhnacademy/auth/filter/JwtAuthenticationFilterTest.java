@@ -3,7 +3,7 @@ package com.nhnacademy.auth.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.AuthApplication;
 import com.nhnacademy.auth.detail.MemberDetails;
-import com.nhnacademy.auth.exception.AuthenticationFailedException;
+import com.nhnacademy.auth.exception.AttemptAuthenticationFailedException;
 import com.nhnacademy.auth.member.request.LoginRequest;
 import com.nhnacademy.auth.member.response.MemberLoginResponse;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
@@ -23,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,11 +32,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import com.nhnacademy.auth.context.ApplicationContextHolder;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 
 @SpringBootTest(classes = AuthApplication.class)
 @ExtendWith(MockitoExtension.class)
@@ -111,12 +112,12 @@ class JwtAuthenticationFilterTest {
             @Override
             public boolean isReady() { return true; }
             @Override
-            public void setReadListener(ReadListener listener) { }
+            public void setReadListener(ReadListener listener) { /* TODO document why this method is empty */ }
         };
 
         BDDMockito.given(request.getInputStream()).willReturn(inputStream);
 
-        Assertions.assertThrows(AuthenticationFailedException.class, () ->
+        Assertions.assertThrows(AttemptAuthenticationFailedException.class, () ->
                 jwtAuthenticationFilter.attemptAuthentication(request, response));
     }
 
@@ -127,7 +128,7 @@ class JwtAuthenticationFilterTest {
         response = Mockito.mock(HttpServletResponse.class);
         Mockito.when(request.getInputStream()).thenThrow(new IOException("invalid json"));
 
-        Assertions.assertThrows(AuthenticationFailedException.class, () ->{
+        Assertions.assertThrows(AttemptAuthenticationFailedException.class, () ->{
             jwtAuthenticationFilter.attemptAuthentication(request, response);
         });
     }
@@ -181,6 +182,52 @@ class JwtAuthenticationFilterTest {
         log.info("expectedResponse: {}", expectedResponse);
         Assertions.assertEquals(expectedResponse, outputStream.toString());
     }
+
+    @Test
+    @DisplayName("로그인 성공 시 권한이 없는 경우")
+    void successfulAuthenticationWithoutAuthorities() throws Exception {
+        // given
+        JwtTokenDto jwtTokenDto = new JwtTokenDto("accessToken", "refreshToken");
+        BDDMockito.given(jwtTokenProvider.generateTokenDto(Mockito.any(), Mockito.any()))
+                .willReturn(jwtTokenDto);
+
+        jwtAuthenticationFilter = new JwtAuthenticationFilter(refreshTokenRepository, authenticationManager, jwtTokenProvider, objectMapper);
+
+        Long memberNo = 1L;
+        String memberEmail = "noauth@test.com";
+        String memberPassword = "password";
+        String roleId = null;
+
+        // 권한 없이 생성
+        MemberLoginResponse memberLoginResponse = new MemberLoginResponse(
+                memberNo, memberEmail, memberPassword, roleId);
+
+        MemberDetails memberDetails = new MemberDetails(memberLoginResponse) {
+            @Override
+            public Collection<? extends GrantedAuthority> getAuthorities() {
+                return Collections.emptyList(); // 권한 없음
+            }
+        };
+
+        Authentication auth = new UsernamePasswordAuthenticationToken(memberDetails, memberPassword, memberDetails.getAuthorities());
+
+        ApplicationContext mockContext = Mockito.mock(ApplicationContext.class);
+        ApplicationEventPublisher mockPublisher = Mockito.mock(ApplicationEventPublisher.class);
+        Mockito.when(mockContext.getBean(ApplicationEventPublisher.class)).thenReturn(mockPublisher);
+        ApplicationContextHolder.setContext(mockContext);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8), true);
+        Mockito.when(response.getWriter()).thenReturn(printWriter);
+
+        // when
+        jwtAuthenticationFilter.successfulAuthentication(request, response, filterChain, auth);
+
+        // then
+        String expectedResponse = objectMapper.writeValueAsString(jwtTokenDto);
+        Assertions.assertEquals(expectedResponse, outputStream.toString());
+    }
+
 
     @Test
     @DisplayName("로그인 실패 시.")

@@ -1,7 +1,11 @@
 package com.nhnacademy.auth.member.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * 로그인 요청에 대한 정보를 담는 DTO 클래스입니다.

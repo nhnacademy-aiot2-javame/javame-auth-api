@@ -1,13 +1,14 @@
 package com.nhnacademy.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.nhnacademy.auth.context.ApplicationContextHolder;
 import com.nhnacademy.auth.detail.MemberDetails;
 import com.nhnacademy.auth.event.LoginSuccessEvent;
+import com.nhnacademy.auth.exception.AttemptAuthenticationFailedException;
 import com.nhnacademy.auth.token.JwtTokenDto;
 import com.nhnacademy.auth.member.request.LoginRequest;
 import com.nhnacademy.auth.token.RefreshToken;
-import com.nhnacademy.auth.exception.AuthenticationFailedException;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
 import com.nhnacademy.auth.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
@@ -17,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -71,6 +73,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      */
     private final ObjectMapper objectMapper;
 
+    /**
+     *  회원 로그인 시 회원의 마지막 로그인 정보를 업데이트 할 이벤트 Publisher.
+     */
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
 
     public JwtAuthenticationFilter(RefreshTokenRepository refreshTokenRepository, AuthenticationManager authenticationManager,
                                    JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) {
@@ -94,7 +101,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 
         } catch (Exception e) {
-            throw new AuthenticationFailedException (e.getMessage());
+            request.setAttribute("exception", new AttemptAuthenticationFailedException());
+            throw new AttemptAuthenticationFailedException();
         }
     }
 

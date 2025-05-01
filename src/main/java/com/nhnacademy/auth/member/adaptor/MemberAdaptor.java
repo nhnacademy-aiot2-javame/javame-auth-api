@@ -18,6 +18,9 @@ public interface MemberAdaptor {
     @PostMapping("/members")
     ResponseEntity<MemberResponse> registerMember(@Validated @RequestBody MemberRegisterRequest request);
 
+    @PostMapping("/members/owner")
+    ResponseEntity<MemberResponse> registerOwner(@Validated @RequestBody MemberRegisterRequest request);
+
     @GetMapping("/members/{memberNo}")
     ResponseEntity<MemberResponse> getMemberById(@PathVariable Long memberNo);
 

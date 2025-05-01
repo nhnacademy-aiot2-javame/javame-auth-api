@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompanyWithOwnerRegisterRequest {
+public class CompanyRegisterRequest {
 
     /**
      * 등록할 회사의 고유 도메인 (기본키).

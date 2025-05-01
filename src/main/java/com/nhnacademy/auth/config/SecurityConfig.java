@@ -1,6 +1,9 @@
 package com.nhnacademy.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.nhnacademy.auth.exception.entrypoint.CustomAuthenticationEntryPoint;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
@@ -45,17 +48,20 @@ public class SecurityConfig {
      * jwtAuthenticationFilter가 기존 UsernamePasswordAuthenticationFilter 필터 자리를 차지해 작동될 수 있도록 합니다.
      *
      * @param http HttpSecurity
+     * @param customAuthenticationEntryPoint spring Security 인증 관련 예외 처리 로직을 받아 커스텀한 entry point.
      * @param refreshTokenRepository refresh token 저장소
      * @return SecurityFilterChain
      * @throws Exception 예외 발생 시
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(requests -> {
                     requests
                             .requestMatchers(
+                                    "/test/**",
+                                    "/auth/register-owner",
                                     "/auth/register",
                                     "/api/v1/auth/login",
                                     "/auth/login",
@@ -69,6 +75,7 @@ public class SecurityConfig {
                             .permitAll()
                             .anyRequest().authenticated(); // 나머지 요청은 인증이 필요
                 })
+                .exceptionHandling(handler -> handler.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .cors(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
@@ -138,7 +145,10 @@ public class SecurityConfig {
      */
     @Bean
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return objectMapper;
     }
 
     /**

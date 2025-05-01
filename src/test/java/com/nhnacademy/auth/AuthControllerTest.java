@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nhnacademy.auth.company.adaptor.CompanyAdaptor;
 import com.nhnacademy.auth.company.request.CompanyUpdateEmailRequest;
 import com.nhnacademy.auth.config.SecurityConfig;
+import com.nhnacademy.auth.exception.entrypoint.CustomAuthenticationEntryPoint;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.member.request.MemberPasswordChangeRequest;
 import com.nhnacademy.auth.member.request.MemberRegisterRequest;
@@ -44,8 +45,8 @@ import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
 @WebMvcTest(
@@ -75,6 +76,9 @@ class AuthControllerTest {
     @MockitoBean
     private RefreshTokenRepository refreshTokenRepository;
 
+    @MockitoBean
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
 
     private String testEmail = "test@test.com";
 
@@ -101,12 +105,12 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("회원 가입 테스트 후 redirect 하는지 검증.")
+    @DisplayName("회원 가입 테스트 후 메세지 주는지 검증.")
     void signUp() throws Exception {
         MemberRegisterRequest registerRequest = new MemberRegisterRequest(testEmail, testPassword, testDomain);
         String json = objectMapper.writeValueAsString(registerRequest);
 
-        MemberResponse memberResponse = new MemberResponse(1L, testEmail, "testName", testDomain, "ROLE_OWNER");
+        MemberResponse memberResponse = new MemberResponse(1L, testEmail, "testName", testDomain, "ROLE_USER");
 
         Mockito.when(memberAdaptor.registerMember(Mockito.any(MemberRegisterRequest.class)))
                 .thenReturn(ResponseEntity.ok().body(memberResponse));
@@ -114,8 +118,28 @@ class AuthControllerTest {
         mockMvc.perform(post("/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json))
-                .andExpect(status().isTemporaryRedirect())
-                .andExpect(header().string("Location", "/api/v1/auth/login"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("회원가입 성공"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("오너 회원 가입 테스트 후 검증.")
+    void signUp_owner() throws Exception {
+        MemberRegisterRequest registerRequest = new MemberRegisterRequest(testEmail, testPassword, testDomain);
+        String json = objectMapper.writeValueAsString(registerRequest);
+
+        MemberResponse memberResponse = new MemberResponse(1L, testEmail, "testName", testDomain, "ROLE_OWNER");
+
+        Mockito.when(memberAdaptor.registerOwner(Mockito.any(MemberRegisterRequest.class)))
+                .thenReturn(ResponseEntity.ok().body(memberResponse));
+
+        mockMvc.perform(post("/auth/register-owner")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("회원가입 성공"))
+                .andDo(print());
     }
 
     @Test
@@ -232,7 +256,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("인증된 사용자와 요청한 이메일이 다른 경우.")
-    void updateEmailFailedByEmailNotEquals() throws Exception {
+    void updateEmailFailedByEmailNotEquals() {
         String newEmail = "new@email.com";
         String wrongEmail = "wrong@email.com";
 
@@ -255,7 +279,7 @@ class AuthControllerTest {
 
     @Test
     @DisplayName("업데이트 권한이 없는 경우. ")
-    void updateEmailFailedByRole() throws Exception {
+    void updateEmailFailedByRole() {
         String newEmail = "new@email.com";
 
         CompanyUpdateEmailRequest request = new CompanyUpdateEmailRequest(testEmail, newEmail);

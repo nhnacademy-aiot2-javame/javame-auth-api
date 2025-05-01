@@ -1,8 +1,15 @@
 package com.nhnacademy.auth.provider;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nhnacademy.auth.exception.GenerateTokenDtoException;
+import com.nhnacademy.auth.exception.MissingTokenException;
 import com.nhnacademy.auth.exception.TokenNotFoundFromCookie;
 import com.nhnacademy.auth.token.JwtTokenDto;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Assertions;
@@ -16,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import java.security.Key;
+import java.util.Date;
 
 @SpringBootTest(classes = JwtTokenProvider.class)
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +56,97 @@ class JwtTokenProviderTest {
         log.info("jwtTokenDto: {}", jwtTokenDto);
         Assertions.assertNotNull(jwtTokenDto);
         Assertions.assertEquals(testEmail, provider.getUserEmailFromToken(jwtTokenDto.getAccessToken()));
+    }
+
+    @Test
+    @DisplayName("토큰 dto 생성 시 userEmail이 empty일 때 - GenerateTokenDtoException 발생 검증.")
+    void generateTokenDto_failedByUserEmail() {
+        Assertions.assertThrows(GenerateTokenDtoException.class, () ->{
+            provider.generateTokenDto("", testRole);
+        });
+    }
+
+    @Test
+    @DisplayName("토큰 dto 생성 시 userRole이 empty일 때 - GenerateTokenDtoException 발생 검증.")
+    void generateTokenDto_failedByUserRole() {
+        Assertions.assertThrows(GenerateTokenDtoException.class, () ->{
+            provider.generateTokenDto(testEmail, "");
+        });
+    }
+
+    @Test
+    @DisplayName("jwt 검증 테스트")
+    void validate_success() {
+        JwtTokenDto jwtTokenDto = provider.generateTokenDto(testEmail, testRole);
+        String accessToken = jwtTokenDto.getAccessToken();
+        String refreshToken = jwtTokenDto.getRefreshToken();
+
+        boolean actual = provider.validateToken(accessToken);
+        boolean real = provider.validateToken(refreshToken);
+
+        Assertions.assertTrue(actual);
+        Assertions.assertTrue(real);
+    }
+
+    @Test
+    @DisplayName("jwt 검증 실패 - 서명이 틀린 토큰")
+    void validate_failed1() {
+        String wrongSecretKey = key.replace("x", "p");
+        byte[] keyBytes = Decoders.BASE64.decode(wrongSecretKey);
+        Key worngKey = Keys.hmacShaKeyFor(keyBytes);
+
+        String token = Jwts.builder()
+                .subject(testEmail)
+                .claim("role", testRole)
+                .issuedAt(new Date())
+                .expiration(new Date(new Date().getTime() + (60 * 30)))
+                .signWith(worngKey)
+                .compact();
+
+        Assertions.assertFalse(provider.validateToken(token));
+    }
+
+    @Test
+    @DisplayName("jwt 검증 실패 - 만료된 토큰")
+    void validate_failed2() {
+        byte[] keyBytes = Decoders.BASE64.decode(key);
+        Key testKey = Keys.hmacShaKeyFor(keyBytes);
+        String token = Jwts.builder()
+                .subject("user1")
+                .expiration(new java.util.Date(System.currentTimeMillis() - 1000))
+                .signWith(testKey)
+                .compact();
+
+        boolean result = provider.validateToken(token);
+        Assertions.assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("jwt 검증 실패 - 형식이 틀린 토큰")
+    void validate_failed3() {
+        String token = "not.a.valid.jwt";
+
+        boolean result = provider.validateToken(token);
+        Assertions.assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("jwt 검증 실패 - 지원되지 않는 형식의 JWT")
+    void validate_failed4() {
+        String token = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyMSJ9."; // header: {"alg":"none"}, payload: {"sub":"user1"}
+
+        boolean result = provider.validateToken(token);
+        Assertions.assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("jwt 검증 실패 - 잘못된 인자 (IllegalArgumentException)")
+    void validate_failed_illegalArgument() {
+        boolean result1 = provider.validateToken(null);
+        boolean result2 = provider.validateToken("   "); // 공백 문자열
+
+        Assertions.assertFalse(result1);
+        Assertions.assertFalse(result2);
     }
 
     @Test
@@ -98,6 +198,28 @@ class JwtTokenProviderTest {
         Assertions.assertEquals(testEmail, actual);
     }
 
+    @Test
+    @DisplayName("parseclaimse에서 ExpiredJwtException 잡는 지 검증. ")
+    void getUserEmailFromToken_ExpiredJwtException() {
+        byte[] keyBytes = Decoders.BASE64.decode(key);
+        Key testKey = Keys.hmacShaKeyFor(keyBytes);
+        String token = Jwts.builder()
+                .subject("user1")
+                .expiration(new java.util.Date(System.currentTimeMillis() - 1000))
+                .signWith(testKey)
+                .compact();
+
+        String subject = provider.getUserEmailFromToken(token);
+        Assertions.assertEquals("user1", subject);
+    }
+
+    @Test
+    @DisplayName("토큰이 null일 때 MissingTokenException 발생하는지 검증. ")
+    void getUserEmailFromToken_failed() {
+        Assertions.assertThrows(MissingTokenException.class, () -> {
+            provider.getUserEmailFromToken("");
+        });
+    }
 
     @Test
     @DisplayName("accesToken에서 role id 가져오기")
@@ -113,4 +235,11 @@ class JwtTokenProviderTest {
         Assertions.assertEquals(testRole, refreshTokenRole);
     }
 
+    @Test
+    @DisplayName("토큰이 비었을 때 MissingTokenException 발생 검증. ")
+    void getRoleIdFromTokenTest_Failed() {
+       Assertions.assertThrows(MissingTokenException.class, () -> {
+           provider.getRoleIdFromToken("");
+       });
+    }
 }
