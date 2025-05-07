@@ -66,7 +66,7 @@ class JwtAuthenticationFilterTest {
     @Mock
     private HttpServletResponse response;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Authentication authentication;
 
@@ -112,7 +112,8 @@ class JwtAuthenticationFilterTest {
             @Override
             public boolean isReady() { return true; }
             @Override
-            public void setReadListener(ReadListener listener) { /* TODO document why this method is empty */ }
+            @SuppressWarnings("java:S1186")
+            public void setReadListener(ReadListener listener) { }
         };
 
         BDDMockito.given(request.getInputStream()).willReturn(inputStream);
@@ -166,8 +167,8 @@ class JwtAuthenticationFilterTest {
         // 5. ApplicationContextHolder 세팅 (LoginSuccessEvent 때문에)
         ApplicationContext mockContext = Mockito.mock(ApplicationContext.class);
         ApplicationEventPublisher mockPublisher = Mockito.mock(ApplicationEventPublisher.class);
-        Mockito.when(mockContext.getBean(ApplicationEventPublisher.class)).thenReturn(mockPublisher);
         ApplicationContextHolder.setContext(mockContext);
+        ReflectionTestUtils.setField(jwtAuthenticationFilter, "applicationEventPublisher", mockPublisher);
 
         // 6. success후 response의 getWriter를 호출하기 때문에 가상 객체라 Writer가 없는 response에 생성해서 넣어줌.
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -177,10 +178,18 @@ class JwtAuthenticationFilterTest {
         // 7. 대망의 테스트할 거 호출
         jwtAuthenticationFilter.successfulAuthentication(request, response, filterChain, auth);
 
+        Mockito.verify(response, Mockito.atLeast(1)).addCookie(Mockito.argThat(cookie ->
+                "accessToken".equals(cookie.getName()) &&
+                        "accessToken".equals(cookie.getValue()) &&
+                        cookie.isHttpOnly() && cookie.getSecure()));
+
+        Mockito.verify(response, Mockito.atLeast(1)).addCookie(Mockito.argThat(cookie ->
+                "refreshToken".equals(cookie.getName()) &&
+                        "refreshToken".equals(cookie.getValue()) &&
+                        cookie.isHttpOnly() && cookie.getSecure()));
+
         //결과 검증
-        String expectedResponse = objectMapper.writeValueAsString(jwtTokenDto);
-        log.info("expectedResponse: {}", expectedResponse);
-        Assertions.assertEquals(expectedResponse, outputStream.toString());
+        Assertions.assertEquals("{\"message\": \"login success\"}", outputStream.toString());
     }
 
     @Test
@@ -213,8 +222,8 @@ class JwtAuthenticationFilterTest {
 
         ApplicationContext mockContext = Mockito.mock(ApplicationContext.class);
         ApplicationEventPublisher mockPublisher = Mockito.mock(ApplicationEventPublisher.class);
-        Mockito.when(mockContext.getBean(ApplicationEventPublisher.class)).thenReturn(mockPublisher);
         ApplicationContextHolder.setContext(mockContext);
+        ReflectionTestUtils.setField(jwtAuthenticationFilter, "applicationEventPublisher", mockPublisher);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         PrintWriter printWriter = new PrintWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8), true);
@@ -223,9 +232,15 @@ class JwtAuthenticationFilterTest {
         // when
         jwtAuthenticationFilter.successfulAuthentication(request, response, filterChain, auth);
 
-        // then
-        String expectedResponse = objectMapper.writeValueAsString(jwtTokenDto);
-        Assertions.assertEquals(expectedResponse, outputStream.toString());
+        Mockito.verify(response, Mockito.atLeast(1)).addCookie(Mockito.argThat(cookie ->
+                "accessToken".equals(cookie.getName()) &&
+                        "accessToken".equals(cookie.getValue())));
+
+        Mockito.verify(response, Mockito.atLeast(1)).addCookie(Mockito.argThat(cookie ->
+                "refreshToken".equals(cookie.getName()) &&
+                        "refreshToken".equals(cookie.getValue())));
+
+        Assertions.assertEquals("{\"message\": \"login success\"}", outputStream.toString());
     }
 
 

@@ -5,9 +5,7 @@ import com.nhnacademy.auth.exception.GenerateTokenDtoException;
 import com.nhnacademy.auth.exception.MissingTokenException;
 import com.nhnacademy.auth.exception.TokenNotFoundFromCookie;
 import com.nhnacademy.auth.token.JwtTokenDto;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
@@ -132,8 +130,10 @@ class JwtTokenProviderTest {
 
     @Test
     @DisplayName("jwt 검증 실패 - 지원되지 않는 형식의 JWT")
+    @SuppressWarnings("java:S125")
     void validate_failed4() {
-        String token = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyMSJ9."; // header: {"alg":"none"}, payload: {"sub":"user1"}
+        // header: {"alg":"none"}, payload: {"sub":"user1"}
+        String token = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c2VyMSJ9.";
 
         boolean result = provider.validateToken(token);
         Assertions.assertFalse(result);

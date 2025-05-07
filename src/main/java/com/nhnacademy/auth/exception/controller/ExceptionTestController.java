@@ -17,7 +17,7 @@ public class ExceptionTestController {
     /**
      *  Exception에 넣어줄 테스트용 토큰.
      */
-    private final String exceptionToken = "test";
+    private static final String EXCEPTION_TOKEN = "test";
 
     @GetMapping("/login-failed")
     public ResponseEntity<String> loginFailed() {
@@ -31,12 +31,12 @@ public class ExceptionTestController {
 
     @GetMapping("/token-failed")
     public void tokenGeneratedFailed() {
-        throw new GenerateTokenDtoException(exceptionToken);
+        throw new GenerateTokenDtoException(EXCEPTION_TOKEN);
     }
 
     @GetMapping("/token-missing")
     public void tokenMissing() {
-        throw new MissingTokenException(exceptionToken);
+        throw new MissingTokenException(EXCEPTION_TOKEN);
     }
 
     @GetMapping("/token-not-found")
@@ -50,6 +50,7 @@ public class ExceptionTestController {
     }
 
     @GetMapping("/auth-failed")
+    @SuppressWarnings("java:S5804")
     public void authFailed() {
         throw new UsernameNotFoundException("test-auth");
     }

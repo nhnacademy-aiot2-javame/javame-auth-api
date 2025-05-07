@@ -2,7 +2,6 @@ package com.nhnacademy.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.nhnacademy.auth.context.ApplicationContextHolder;
 import com.nhnacademy.auth.detail.MemberDetails;
 import com.nhnacademy.auth.event.LoginSuccessEvent;
 import com.nhnacademy.auth.exception.AttemptAuthenticationFailedException;
@@ -13,6 +12,7 @@ import com.nhnacademy.auth.provider.JwtTokenProvider;
 import com.nhnacademy.auth.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -77,6 +77,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      *  회원 로그인 시 회원의 마지막 로그인 정보를 업데이트 할 이벤트 Publisher.
      */
     @Autowired
+    @SuppressWarnings("java:S6813")
     private ApplicationEventPublisher applicationEventPublisher;
 
     public JwtAuthenticationFilter(RefreshTokenRepository refreshTokenRepository, AuthenticationManager authenticationManager,
@@ -123,16 +124,26 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         log.debug("--- Redis Key 생성 완료 ---");
         refreshTokenRepository.save(new RefreshToken(redisKey, jwtTokenDto.getRefreshToken()));
         log.debug("--- Refresh Token 저장 ---");
-        String result = objectMapper.writeValueAsString(jwtTokenDto);
-
-        //로그인 성공 이벤트 발생 -> 최근 로그인 시간 업데이트
-//        ApplicationContextHolder.getContext().getBean(ApplicationEventPublisher.class).publishEvent(new LoginSuccessEvent(this, authResult.getName()));
 
         applicationEventPublisher.publishEvent(new LoginSuccessEvent(this, authResult.getName()));
+        
+        Cookie accessCookie = new Cookie("accessToken", jwtTokenDto.getAccessToken());
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(900); // 15분
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie("refreshToken", jwtTokenDto.getRefreshToken());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(60 * 60 * 24 * 7); // 7일
+        response.addCookie(refreshCookie);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(result);
+        response.getWriter().write("{\"message\": \"login success\"}");
         response.getWriter().flush();
     }
 
