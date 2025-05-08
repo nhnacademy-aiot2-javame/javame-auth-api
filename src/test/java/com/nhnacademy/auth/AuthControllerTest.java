@@ -43,6 +43,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -146,17 +147,18 @@ class AuthControllerTest {
     @DisplayName("로그아웃 시 쿠키 값을 비우는지 검증.")
     void logout() throws Exception {
         MvcResult result = mockMvc.perform(post("/auth/logout")
+                        .cookie(new Cookie("refreshToken", testToken))
                         .cookie(new Cookie("accessToken", testToken)))
                 .andExpect(status().isOk()).andReturn();
 
-        String header = result.getResponse().getHeader("Set-Cookie");
+        List<String> header = result.getResponse().getHeaders("Set-Cookie");
         log.info("result response: {}", header);
 
         // Check if deleteById was called with the correct token
         Mockito.verify(refreshTokenRepository, Mockito.times(1)).deleteById(Mockito.anyString());
         Assertions.assertNotNull(header);
-        Assertions.assertTrue(header.contains("accessToken=;"));
-        Assertions.assertTrue(header.contains("Max-Age=0"));
+        Assertions.assertTrue(header.stream().anyMatch(h -> h.startsWith("accessToken=;") && h.contains("Max-Age=0")));
+        Assertions.assertTrue(header.stream().anyMatch(h -> h.startsWith("refreshToken=;") && h.contains("Max-Age=0")));
     }
 
     @Test

@@ -57,7 +57,7 @@ public class AuthController {
     private final MemberAdaptor memberAdaptor;
 
     /**
-     * 비밀번호 암호화를 위한 PasswordEncoder.
+     * 암호화를 위한 PasswordEncoder.
      */
     private final PasswordEncoder passwordEncoder;
 
@@ -99,12 +99,14 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> signup(@Valid @RequestBody MemberRegisterRequest request) {
+        String encodeEmail = passwordEncoder.encode(request.getMemberEmail());
         String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
+        String encodeDomain = passwordEncoder.encode(request.getCompanyDomain());
 
         MemberRegisterRequest encodeRequest = new MemberRegisterRequest(
-                request.getMemberEmail(),
+                encodeEmail,
                 encodedPassword,
-                request.getCompanyDomain());
+                encodeDomain);
 
         memberAdaptor.registerMember(encodeRequest);
 
@@ -121,12 +123,14 @@ public class AuthController {
      */
     @PostMapping("/register-owner")
     public ResponseEntity<Map<String, String>> signupOwner(@Valid @RequestBody MemberRegisterRequest request) {
+        String encodeEmail = passwordEncoder.encode(request.getMemberEmail());
         String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
+        String encodeDomain = passwordEncoder.encode(request.getCompanyDomain());
 
         MemberRegisterRequest encodeRequest = new MemberRegisterRequest(
-                request.getMemberEmail(),
+                encodeEmail,
                 encodedPassword,
-                request.getCompanyDomain());
+                encodeDomain);
 
         memberAdaptor.registerOwner(encodeRequest);
 
@@ -150,12 +154,19 @@ public class AuthController {
         refreshTokenRepository.deleteById(DigestUtils.sha256Hex(tokenPrefix + ":" + username)); // Redis or DB에서 삭제
 
         // Cookie 제거
-        Cookie expiredCookie = new Cookie("accessToken", null);
-        expiredCookie.setHttpOnly(true); //JS 접근 불가.
-        expiredCookie.setSecure(true); //HTTPS 전용
-        expiredCookie.setPath("/");
-        expiredCookie.setMaxAge(0);
-        response.addCookie(expiredCookie);
+        Cookie expiredAccessCookie = new Cookie("accessToken", null);
+        expiredAccessCookie.setHttpOnly(true); //JS 접근 불가.
+        expiredAccessCookie.setSecure(true); //HTTPS 전용
+        expiredAccessCookie.setPath("/");
+        expiredAccessCookie.setMaxAge(0);
+        response.addCookie(expiredAccessCookie);
+
+        Cookie expiredRefreshCookie = new Cookie("refreshToken", null);
+        expiredRefreshCookie.setHttpOnly(true); //JS 접근 불가.
+        expiredRefreshCookie.setSecure(true); //HTTPS 전용
+        expiredRefreshCookie.setPath("/");
+        expiredRefreshCookie.setMaxAge(0);
+        response.addCookie(expiredRefreshCookie);
 
         return ResponseEntity.ok().build();
     }

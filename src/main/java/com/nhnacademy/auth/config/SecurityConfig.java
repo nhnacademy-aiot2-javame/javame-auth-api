@@ -27,7 +27,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @EnableAsync
 @Configuration
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity()
 public class SecurityConfig {
     /**
      * JWT 토큰을 생성, 파싱 및 검증하는 유틸리티 클래스입니다.
