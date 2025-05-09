@@ -1,17 +1,21 @@
 package com.nhnacademy.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.nhnacademy.auth.exception.entrypoint.CustomAuthenticationEntryPoint;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
+import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
-
-import lombok.RequiredArgsConstructor;
-
+import com.nhnacademy.auth.repository.RefreshTokenRepository;
+import com.nhnacademy.auth.detail.MemberDetailsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,16 +24,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
-
+@EnableAsync
 @Configuration
-@EnableWebSecurity
-@RequiredArgsConstructor
-//(debug = true)
+@EnableWebSecurity()
 public class SecurityConfig {
     /**
      * JWT 토큰을 생성, 파싱 및 검증하는 유틸리티 클래스입니다.
@@ -46,35 +44,45 @@ public class SecurityConfig {
 
     /**
      * Spring Security의 필터 체인을 정의합니다.
+     * csrf보호 기능 해제, 디폴트 로그인, 로그아웃 폼 사용 해제, 세션을 stateless로 설정합니다.
+     * jwtAuthenticationFilter가 기존 UsernamePasswordAuthenticationFilter 필터 자리를 차지해 작동될 수 있도록 합니다.
      *
      * @param http HttpSecurity
+     * @param refreshTokenRepository refresh token 저장소
      * @return SecurityFilterChain
      * @throws Exception 예외 발생 시
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(requests -> {
                     requests
                             .requestMatchers(
+                                    "/test/**",
+                                    "/auth/register-owner",
+                                    "/auth/register",
+                                    "/auth/purchase",
+                                    "/api/v1/auth/login",
                                     "/auth/login",
                                     "/auth/signup",
-
-                                    "/auth/register",
-                                    "/api/auth/register",
-                                    "/api/auth/login"
-                            ).permitAll()
+                                    "/v3/api-docs/**",
+                                    "/swagger-ui/**",
+                                    "/swagger-ui.html",
+                                    "/error",
+                                    "/favicon.ico"
+                            )
+                            .permitAll()
                             .anyRequest().authenticated(); // 나머지 요청은 인증이 필요
                 })
-//                .cors(Customizer.withDefaults())
-
+                .exceptionHandling(handler -> handler.authenticationEntryPoint(customAuthenticationEntryPoint))
+                .cors(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterAt(jwtAuthenticationFilter
-                                (http.getSharedObject(AuthenticationManager.class)),
+                                (http.getSharedObject(AuthenticationManager.class), refreshTokenRepository),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -84,28 +92,37 @@ public class SecurityConfig {
     /**
      * 인증 매니저 빈 등록.
      *
-     * @param authenticationConfiguration 인증 설정
+     * @param memberDetailsService custom 한 memberDetailsService
+     * @param passwordEncoder bCryptPasswordEncoder
      * @return AuthenticationManager
      * @throws Exception 예외 발생 시
      */
     @Bean
-    public AuthenticationManager authenticationManager
-    (AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager (MemberDetailsService memberDetailsService, PasswordEncoder passwordEncoder) throws Exception {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(memberDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+
+        return new ProviderManager(provider);
+    }
+
+    @Bean
+    public MemberDetailsService memberDetailsService(MemberAdaptor memberAdaptor) {
+        return new MemberDetailsService(memberAdaptor);
     }
 
     /**
      * JWT 인증 필터 빈 등록.
      * @param authenticationManager securityConfig에서 생성되는 manager
+     * @param refreshTokenRepository JWT refresh token 저장 및 조회하는 repository
      * @return JwtAuthenticationFilter
-     * @throws Exception 예외 발생 시
      */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter
-    (AuthenticationManager authenticationManager) {
+    (AuthenticationManager authenticationManager, RefreshTokenRepository refreshTokenRepository) {
         JwtAuthenticationFilter filter =
-                new JwtAuthenticationFilter(authenticationManager,
+                new JwtAuthenticationFilter(refreshTokenRepository,
+                        authenticationManager,
                         jwtTokenProvider(),
                         objectMapper());
         filter.setAuthenticationManager(authenticationManager);
@@ -128,7 +145,10 @@ public class SecurityConfig {
      */
     @Bean
     public ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return objectMapper;
     }
 
     /**
@@ -140,20 +160,5 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(List.of("http://localhost:10251")); // 허용할 Origin
-//        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//        configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
-//        configuration.setAllowCredentials(true); // 쿠키 허용 시 true
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration); // 모든 경로에 적용
-//        return source;
-//    }
-
 
 }
