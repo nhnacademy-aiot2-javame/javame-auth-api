@@ -2,6 +2,7 @@ package com.nhnacademy.auth;
 
 import com.nhnacademy.auth.company.adaptor.CompanyAdaptor;
 import com.nhnacademy.auth.company.request.CompanyUpdateEmailRequest;
+import com.nhnacademy.auth.config.AESUtil;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.member.request.MemberPasswordChangeRequest;
 import com.nhnacademy.auth.member.request.MemberRegisterRequest;
@@ -99,9 +100,9 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> signup(@Valid @RequestBody MemberRegisterRequest request) {
-        String encodeEmail = passwordEncoder.encode(request.getMemberEmail());
+        String encodeEmail = AESUtil.encrypt(request.getMemberEmail());
         String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
-        String encodeDomain = passwordEncoder.encode(request.getCompanyDomain());
+        String encodeDomain = AESUtil.encrypt(request.getCompanyDomain());
 
         MemberRegisterRequest encodeRequest = new MemberRegisterRequest(
                 encodeEmail,
@@ -123,9 +124,9 @@ public class AuthController {
      */
     @PostMapping("/register-owner")
     public ResponseEntity<Map<String, String>> signupOwner(@Valid @RequestBody MemberRegisterRequest request) {
-        String encodeEmail = passwordEncoder.encode(request.getMemberEmail());
+        String encodeEmail = AESUtil.encrypt(request.getMemberEmail());
         String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
-        String encodeDomain = passwordEncoder.encode(request.getCompanyDomain());
+        String encodeDomain = AESUtil.encrypt(request.getCompanyDomain());
 
         MemberRegisterRequest encodeRequest = new MemberRegisterRequest(
                 encodeEmail,

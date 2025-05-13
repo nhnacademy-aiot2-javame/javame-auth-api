@@ -176,6 +176,17 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    @DisplayName("cookie가 null이면 null을 반환")
+    void resolveTokenFromCookie_cookieIsNull() {
+        HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+        Mockito.when(request.getCookies()).thenReturn(null);
+
+        String actual = provider.resolveTokenFromCookie(request);
+
+        Assertions.assertNull(actual);
+    }
+
+    @Test
     @DisplayName("cookie에서 토큰이 없을 때 TokenNotFoundFromCookie Exception 검증.")
     void resolveTokenFromCookie_notFound() {
         Cookie cookie1 = new Cookie("type", "Bearer");
