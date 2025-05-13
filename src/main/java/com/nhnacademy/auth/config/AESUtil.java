@@ -15,6 +15,11 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
+/**
+ * AES: 암호화 알고리즘 중 하나입니다. DES를 보완한 기술로 데이터를 128비트 블록으로 나눈 다음 수학적 연산들을 이용해 암호 블록으로 변환하는 방식입니다.
+ * AES 알고리즘을 사용하여 암호화 및 복호화를 하는 Util 입니다.
+ * javax.crypto를 사용해, Spring Security를 사용하지 않는 서비스에서도 사용 가능합니다.
+ */
 @Component
 public class AESUtil {
     /**
