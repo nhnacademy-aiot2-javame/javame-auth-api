@@ -12,7 +12,6 @@ import com.nhnacademy.auth.provider.JwtTokenProvider;
 import com.nhnacademy.auth.repository.RefreshTokenRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -126,21 +125,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         log.debug("--- Refresh Token 저장 ---");
 
         applicationEventPublisher.publishEvent(new LoginSuccessEvent(this, authResult.getName()));
-        
-        Cookie accessCookie = new Cookie("accessToken", jwtTokenDto.getAccessToken());
-        accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
-        accessCookie.setPath("/");
-        accessCookie.setMaxAge(900); // 15분
-        response.addCookie(accessCookie);
 
-        Cookie refreshCookie = new Cookie("refreshToken", jwtTokenDto.getRefreshToken());
-        refreshCookie.setHttpOnly(true);
-        refreshCookie.setSecure(true);
-        refreshCookie.setPath("/");
-        refreshCookie.setMaxAge(60 * 60 * 24 * 7); // 7일
-        response.addCookie(refreshCookie);
+        // JWT를 응답 헤더에 담기
+        response.setHeader("Authorization", "Bearer " + jwtTokenDto.getAccessToken());
+        response.setHeader("Refresh-Token", jwtTokenDto.getRefreshToken());
 
+        // JSON 응답도 함께 제공 (선택 사항)
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("{\"message\": \"login success\"}");
