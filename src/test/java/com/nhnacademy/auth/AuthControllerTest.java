@@ -224,7 +224,7 @@ class AuthControllerTest {
         Mockito.when(jwtTokenProvider.getUserEmailFromToken(Mockito.anyString())).thenReturn(testEmail);
         Mockito.when(memberAdaptor.getMemberByEmail(Mockito.anyString())).thenReturn(ResponseEntity.ok(memberResponse));
         MemberPasswordChangeRequest rq = new MemberPasswordChangeRequest(testPassword, encodeTestPassword);
-        Mockito.when(memberAdaptor.changeMemberPassword(memberResponse.getMemberNo(), rq)).thenReturn(ResponseEntity.ok().build());
+        Mockito.when(memberAdaptor.changeMemberPassword(memberResponse.getMemberNo(), rq, memberResponse.getMemberEmail())).thenReturn(ResponseEntity.ok().build());
 
         mockMvc.perform(patch("/auth/update/password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -232,7 +232,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        Mockito.verify(memberAdaptor, Mockito.times(1)).changeMemberPassword(Mockito.anyLong(), Mockito.any(MemberPasswordChangeRequest.class));
+        Mockito.verify(memberAdaptor, Mockito.times(1)).changeMemberPassword(Mockito.anyLong(), Mockito.any(MemberPasswordChangeRequest.class), Mockito.any());
     }
 
     @Test
