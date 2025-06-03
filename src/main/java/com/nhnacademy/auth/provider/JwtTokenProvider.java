@@ -32,14 +32,14 @@ public class JwtTokenProvider {
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
 
     /**
-     * Access Token 유효 시간 (30분).
+     * Access Token 유효 시간 (5분).
      */
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30;
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 5;
 
     /**
-     * Refresh Token 유효 시간 (7일).
+     * Refresh Token 유효 시간 (1시간 30분).
      */
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7;
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 90;
 
     /**
      * java.io.Serializable: 객체를 파일로 저장하거나 네트워크를 통해 전송할 수 있도록 변환하는 인터페이스.

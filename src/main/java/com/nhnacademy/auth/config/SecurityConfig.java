@@ -49,11 +49,13 @@ public class SecurityConfig {
      *
      * @param http HttpSecurity
      * @param refreshTokenRepository refresh token 저장소
+     * @param customAuthenticationEntryPoint 인증 에러 처리를 ExceptionHandler에서 처리할 수 있도록 설정한 custom entry point
      * @return SecurityFilterChain
      * @throws Exception 예외 발생 시
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository, CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository,
+                                           CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(requests -> {
@@ -76,7 +78,6 @@ public class SecurityConfig {
                             .anyRequest().authenticated(); // 나머지 요청은 인증이 필요
                 })
                 .exceptionHandling(handler -> handler.authenticationEntryPoint(customAuthenticationEntryPoint))
-                .cors(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
@@ -87,7 +88,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
 
     /**
      * 인증 매니저 빈 등록.

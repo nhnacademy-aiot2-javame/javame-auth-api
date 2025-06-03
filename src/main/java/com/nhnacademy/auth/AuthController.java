@@ -93,55 +93,6 @@ public class AuthController {
     }
 
     /**
-     * 회원가입 요청을 처리합니다.
-     *
-     * @param request 회원가입 요청 DTO
-     * @return 리다이렉트 응답
-     */
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> signup(@Valid @RequestBody MemberRegisterRequest request) {
-        String encodeEmail = AESUtil.encrypt(request.getMemberEmail());
-        String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
-        String encodeDomain = AESUtil.encrypt(request.getCompanyDomain());
-
-        MemberRegisterRequest encodeRequest = new MemberRegisterRequest(
-                encodeEmail,
-                encodedPassword,
-                encodeDomain);
-
-        memberAdaptor.registerMember(encodeRequest);
-
-        Map<String, String> body = Map.of("message", "회원가입 성공");
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
-    }
-
-    /**
-     * 회원가입 요청을 처리합니다.
-     *
-     * @param request 회원가입 요청 DTO
-     * @return 리다이렉트 응답
-     */
-    @PostMapping("/register-owner")
-    public ResponseEntity<Map<String, String>> signupOwner(@Valid @RequestBody MemberRegisterRequest request) {
-        String encodeEmail = AESUtil.encrypt(request.getMemberEmail());
-        String encodedPassword = passwordEncoder.encode(request.getMemberPassword());
-        String encodeDomain = AESUtil.encrypt(request.getCompanyDomain());
-
-        MemberRegisterRequest encodeRequest = new MemberRegisterRequest(
-                encodeEmail,
-                encodedPassword,
-                encodeDomain);
-
-        memberAdaptor.registerOwner(encodeRequest);
-
-        Map<String, String> body = Map.of("message", "회원가입 성공");
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(body);
-    }
-
-
-    /**
      * 로그아웃 요청을 처리합니다.
      *
      * @param request 프론트로부터 담겨진 쿠키를 가져옴.
@@ -207,7 +158,7 @@ public class AuthController {
         MemberPasswordChangeRequest encodeRequest = new MemberPasswordChangeRequest(encodeCurrentPassword,
                                                                                     encodeNewPassword);
 
-        memberAdaptor.changeMemberPassword(Objects.requireNonNull(member).getMemberNo(), encodeRequest);
+        memberAdaptor.changeMemberPassword(Objects.requireNonNull(member).getMemberNo(), encodeRequest, userId);
 
         return ResponseEntity.ok().build();
     }
