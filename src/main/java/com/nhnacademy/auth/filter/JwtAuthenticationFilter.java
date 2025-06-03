@@ -92,12 +92,17 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         log.info("---USERNAME&PASSWORD_FILTER_BY_JWT---");
+
         try {
             //request 요청 값에서 id, password가 있어야 함. 그걸 loginRequest.class로 받아올 수 있어야함...
             LoginRequest loginRequest = objectMapper.readValue(request.getInputStream(), LoginRequest.class);
+            log.info("loginRequest: {}", loginRequest);
+            log.info("loginRequest email: {}", loginRequest.getMemberEmail());
+            log.info("loginRequest password: {}", loginRequest.getMemberPassword());
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                     loginRequest.getMemberEmail(),
                     loginRequest.getMemberPassword()
+
             );
             return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 
