@@ -40,7 +40,7 @@ class RefreshTokenRepositoryTest {
         JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto("test@test.com", "ROLE_USER");
         String redisKey = DigestUtils.sha256Hex(tokenPrefix + ":" + "test@test.com");
         log.info("redisKey: {}", redisKey);
-        RefreshToken refreshToken = new RefreshToken(redisKey, jwtTokenDto.getRefreshToken());
+        RefreshToken refreshToken = new RefreshToken(redisKey, jwtTokenDto.getRefreshToken(), "testUserAgent", "testIp");
 
         refreshTokenRepository.save(refreshToken);
         Optional<RefreshToken> result = refreshTokenRepository.findById(redisKey);

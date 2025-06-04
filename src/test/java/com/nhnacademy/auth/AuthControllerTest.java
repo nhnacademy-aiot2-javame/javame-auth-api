@@ -42,6 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +112,7 @@ class AuthControllerTest {
         MemberRegisterRequest registerRequest = new MemberRegisterRequest(testEmail, testPassword, testDomain);
         String json = objectMapper.writeValueAsString(registerRequest);
 
-        MemberResponse memberResponse = new MemberResponse(1L, testEmail, "testName", testDomain, "ROLE_USER");
+        MemberResponse memberResponse = new MemberResponse(1L, testEmail, testDomain, "ROLE_USER", LocalDateTime.now(), LocalDateTime.now());
 
         Mockito.when(memberAdaptor.registerMember(Mockito.any(MemberRegisterRequest.class)))
                 .thenReturn(ResponseEntity.ok().body(memberResponse));
@@ -129,8 +130,7 @@ class AuthControllerTest {
     void signUp_owner() throws Exception {
         MemberRegisterRequest registerRequest = new MemberRegisterRequest(testEmail, testPassword, testDomain);
         String json = objectMapper.writeValueAsString(registerRequest);
-
-        MemberResponse memberResponse = new MemberResponse(1L, testEmail, "testName", testDomain, "ROLE_OWNER");
+        MemberResponse memberResponse = new MemberResponse(1L, testEmail, testDomain, "ROLE_OWNER", LocalDateTime.now(), LocalDateTime.now());
 
         Mockito.when(memberAdaptor.registerOwner(Mockito.any(MemberRegisterRequest.class)))
                 .thenReturn(ResponseEntity.ok().body(memberResponse));
@@ -166,7 +166,6 @@ class AuthControllerTest {
     void refreshSuccessTest() throws Exception {
         Mockito.when(jwtTokenProvider.generateTokenDto(testEmail, "ROLE_USER")).thenReturn(new JwtTokenDto(testToken, testToken));
         Mockito.when(refreshTokenRepository.existsById(Mockito.anyString())).thenReturn(true);
-        Mockito.when(jwtTokenProvider.resolveTokenFromCookie(Mockito.any())).thenReturn(testToken);
         Mockito.when(jwtTokenProvider.getUserEmailFromToken(Mockito.anyString())).thenReturn(testEmail);
         Mockito.when(jwtTokenProvider.getRoleIdFromToken(Mockito.anyString())).thenReturn("ROLE_USER");
         MockCookie testCookie = new MockCookie("refreshToken", testToken);
@@ -192,7 +191,6 @@ class AuthControllerTest {
     @Test
     @DisplayName("refresh 토큰으로 jwt 토큰 새로 발급 실패했을 때 null이 나오는지 테스트.")
     void refreshFailedTest() throws Exception {
-        Mockito.when(jwtTokenProvider.resolveTokenFromCookie(Mockito.any())).thenReturn(testToken);
         Mockito.when(jwtTokenProvider.getUserEmailFromToken(Mockito.anyString())).thenReturn(testEmail);
         Mockito.when(jwtTokenProvider.getRoleIdFromToken(Mockito.anyString())).thenReturn("ROLE_USER");
         Mockito.when(refreshTokenRepository.existsById(Mockito.anyString())).thenReturn(false); // 존재하지 않는다고 설정
@@ -219,8 +217,7 @@ class AuthControllerTest {
     @DisplayName("비밀번호 변경 시 토큰이 changeMemberPassword가 호출되는지 확인")
     void updatePassword() throws Exception {
         String encodeTestPassword = "encodePassword";
-        MemberResponse memberResponse = new MemberResponse(1L, testEmail, "testName", "test.com", "ROLE_USER");
-        Mockito.when(jwtTokenProvider.resolveTokenFromCookie(Mockito.any())).thenReturn(testToken);
+        MemberResponse memberResponse = new MemberResponse(1L, testEmail, "test.com", "ROLE_USER", LocalDateTime.now(), LocalDateTime.now());
         Mockito.when(jwtTokenProvider.getUserEmailFromToken(Mockito.anyString())).thenReturn(testEmail);
         Mockito.when(memberAdaptor.getMemberByEmail(Mockito.anyString())).thenReturn(ResponseEntity.ok(memberResponse));
         MemberPasswordChangeRequest rq = new MemberPasswordChangeRequest(testPassword, encodeTestPassword);
@@ -242,7 +239,6 @@ class AuthControllerTest {
 
         CompanyUpdateEmailRequest request = new CompanyUpdateEmailRequest(testEmail, newEmail);
 
-        Mockito.when(jwtTokenProvider.resolveTokenFromCookie(Mockito.any())).thenReturn(testToken);
         Mockito.when(jwtTokenProvider.getRoleIdFromToken(Mockito.anyString())).thenReturn("ROLE_OWNER");
 
         mockMvc.perform(patch("/auth/update/{companyDomain}/email", testDomain)
@@ -264,7 +260,6 @@ class AuthControllerTest {
 
         CompanyUpdateEmailRequest request = new CompanyUpdateEmailRequest(wrongEmail, newEmail);
 
-        Mockito.when(jwtTokenProvider.resolveTokenFromCookie(Mockito.any())).thenReturn(testToken);
         Mockito.when(jwtTokenProvider.getRoleIdFromToken(Mockito.anyString())).thenReturn("ROLE_OWNER");
 
         AccessDeniedException exception = Assertions.assertThrows(AccessDeniedException.class, () -> {
@@ -286,7 +281,6 @@ class AuthControllerTest {
 
         CompanyUpdateEmailRequest request = new CompanyUpdateEmailRequest(testEmail, newEmail);
 
-        Mockito.when(jwtTokenProvider.resolveTokenFromCookie(Mockito.any())).thenReturn(testToken);
         Mockito.when(jwtTokenProvider.getRoleIdFromToken(Mockito.anyString())).thenReturn("ROLE_USER");
 
         AccessDeniedException exception = Assertions.assertThrows(AccessDeniedException.class, () -> {

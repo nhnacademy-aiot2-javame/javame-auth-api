@@ -2,6 +2,7 @@ package com.nhnacademy.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.nhnacademy.auth.config.IpUtil;
 import com.nhnacademy.auth.detail.MemberDetails;
 import com.nhnacademy.auth.event.LoginSuccessEvent;
 import com.nhnacademy.auth.exception.AttemptAuthenticationFailedException;
@@ -101,7 +102,6 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                     loginRequest.getMemberEmail(),
                     loginRequest.getMemberPassword()
-
             );
             return authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 
@@ -121,19 +121,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .toList();
 
         String role = authorities.isEmpty() ? null : authorities.getFirst();
+        String userAgent = request.getHeader("User-Agent").isEmpty() ? null : request.getHeader("User-Agent");
 
         JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(authResult.getName(), role);
-        log.debug("--- jwt Token 생성 완료 ---");
+        log.info("--- jwt Token 생성 완료 ---");
         String redisKey = DigestUtils.sha256Hex(tokenPrefix + ":" + authResult.getName());
-        log.debug("--- Redis Key 생성 완료 ---");
-        refreshTokenRepository.save(new RefreshToken(redisKey, jwtTokenDto.getRefreshToken()));
-        log.debug("--- Refresh Token 저장 ---");
+        log.info("--- Redis Key 생성 완료 ---");
+        refreshTokenRepository.save(new RefreshToken(redisKey, jwtTokenDto.getRefreshToken(), userAgent, IpUtil.getClientIp(request)));
+        log.info("--- Refresh Token 저장 ---");
 
         applicationEventPublisher.publishEvent(new LoginSuccessEvent(this, authResult.getName()));
 
         // JWT를 응답 헤더에 담기
         response.setHeader("Authorization", "Bearer " + jwtTokenDto.getAccessToken());
-        response.setHeader("Refresh-Token", jwtTokenDto.getRefreshToken());
+        response.setHeader("X-Refresh-Token", jwtTokenDto.getRefreshToken());
 
         // JSON 응답도 함께 제공 (선택 사항)
         response.setContentType("application/json");

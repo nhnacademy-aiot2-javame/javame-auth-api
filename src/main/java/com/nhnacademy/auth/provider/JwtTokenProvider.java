@@ -2,7 +2,6 @@ package com.nhnacademy.auth.provider;
 
 import com.nhnacademy.auth.exception.GenerateTokenDtoException;
 import com.nhnacademy.auth.exception.MissingTokenException;
-import com.nhnacademy.auth.exception.TokenNotFoundFromCookie;
 import com.nhnacademy.auth.token.JwtTokenDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -11,8 +10,6 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -26,6 +23,7 @@ import java.util.Date;
 /**
  * Jwt 토큰 생성을 위한 Provider 클래스.
  */
+@SuppressWarnings("java:S2184")
 @Getter
 public class JwtTokenProvider {
     /** 로그가 실행되지 않음. */
@@ -34,7 +32,7 @@ public class JwtTokenProvider {
     /**
      * Access Token 유효 시간 (5분).
      */
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 5;
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 1;
 
     /**
      * Refresh Token 유효 시간 (1시간 30분).
@@ -93,17 +91,6 @@ public class JwtTokenProvider {
         return new JwtTokenDto(accessToken, refreshToken);
     }
 
-    public String resolveTokenFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().toLowerCase().contains("token")) {
-                    return cookie.getValue();
-                } else throw new TokenNotFoundFromCookie();
-            }
-        }
-        return null;
-    }
 
     public String getUserEmailFromToken(String accessToken) {
         if (StringUtils.isEmpty(accessToken)) {

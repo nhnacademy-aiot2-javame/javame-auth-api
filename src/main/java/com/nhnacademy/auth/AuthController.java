@@ -2,23 +2,23 @@ package com.nhnacademy.auth;
 
 import com.nhnacademy.auth.company.adaptor.CompanyAdaptor;
 import com.nhnacademy.auth.company.request.CompanyUpdateEmailRequest;
-import com.nhnacademy.auth.config.AESUtil;
+import com.nhnacademy.auth.config.IpUtil;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.member.request.MemberPasswordChangeRequest;
-import com.nhnacademy.auth.member.request.MemberRegisterRequest;
 import com.nhnacademy.auth.member.response.MemberResponse;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
 import com.nhnacademy.auth.repository.RefreshTokenRepository;
 import com.nhnacademy.auth.token.JwtTokenDto;
 import com.nhnacademy.auth.token.RefreshToken;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
 
@@ -39,6 +38,7 @@ import java.util.Objects;
  */
 @RestController
 @RequestMapping("/auth")
+@Slf4j
 public class AuthController {
 
     /**
@@ -101,64 +101,57 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-        String token = jwtTokenProvider.resolveTokenFromCookie(request); // 쿠키에서 토큰 꺼냄
-        String username = jwtTokenProvider.getUserEmailFromToken(token);
-        refreshTokenRepository.deleteById(DigestUtils.sha256Hex(tokenPrefix + ":" + username)); // Redis or DB에서 삭제
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Cookie 제거
-        Cookie expiredAccessCookie = new Cookie("accessToken", null);
-        expiredAccessCookie.setHttpOnly(true); //JS 접근 불가.
-        expiredAccessCookie.setSecure(true); //HTTPS 전용
-        expiredAccessCookie.setPath("/");
-        expiredAccessCookie.setMaxAge(0);
-        response.addCookie(expiredAccessCookie);
-
-        Cookie expiredRefreshCookie = new Cookie("refreshToken", null);
-        expiredRefreshCookie.setHttpOnly(true); //JS 접근 불가.
-        expiredRefreshCookie.setSecure(true); //HTTPS 전용
-        expiredRefreshCookie.setPath("/");
-        expiredRefreshCookie.setMaxAge(0);
-        response.addCookie(expiredRefreshCookie);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new InsufficientAuthenticationException("로그인 상태가 아닙니다.");
+        }
+        String userEmail = authentication.getName(); // JwtFilter나 HeaderFilter에서 set한 이메일
+        refreshTokenRepository.deleteById(DigestUtils.sha256Hex(tokenPrefix + ":" + userEmail)); // Redis or DB에서 삭제
 
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/refresh")
     public ResponseEntity<JwtTokenDto> refresh(HttpServletRequest request) {
-        //gateway가 refresh token을 검증해줬으므로 믿고 사용하겠음.
-        String refreshToken = jwtTokenProvider.resolveTokenFromCookie(request);
-        String userId = jwtTokenProvider.getUserEmailFromToken(refreshToken);
-        String userRole = jwtTokenProvider.getRoleIdFromToken(refreshToken);
-
-        String refreshTokenId = DigestUtils.sha256Hex(tokenPrefix + ":" + userId);
-
-        if (refreshTokenRepository.existsById(refreshTokenId)) {
-            JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(userId, userRole);
-            RefreshToken savedToken = new RefreshToken(DigestUtils.sha256Hex(tokenPrefix + ":" + userId), refreshToken);
-            refreshTokenRepository.save(savedToken);
-
-            return ResponseEntity.ok(jwtTokenDto);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new InsufficientAuthenticationException("로그인 상태가 아닙니다.");
         }
+        String userEmail = authentication.getName();
+        String userRole = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .orElse(null);
 
-        //body에 null을 넣어주면 빈 문자열을 반환합니다.
-        //만일 null을 기대한다면 "null"로 넣어주면 됩니다.
-        return ResponseEntity.ok(null);
+        JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(userEmail, userRole);
+        RefreshToken savedToken = new RefreshToken(DigestUtils.sha256Hex(tokenPrefix + ":" + userEmail),
+                jwtTokenDto.getRefreshToken(),
+                request.getHeader("User-Agent"),
+                IpUtil.getClientIp(request));
+        refreshTokenRepository.save(savedToken);
+
+        return ResponseEntity.ok(jwtTokenDto);
     }
 
     @PatchMapping("/update/password")
     public ResponseEntity<Void> updatePassword(HttpServletRequest request,
                                                @RequestBody MemberPasswordChangeRequest passwordUpdateRequest) {
+        log.info("request class: {}", request.getClass().getName());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        String accessToken = jwtTokenProvider.resolveTokenFromCookie(request);
-        String userId = jwtTokenProvider.getUserEmailFromToken(accessToken);
-        MemberResponse member = memberAdaptor.getMemberByEmail(userId).getBody();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new InsufficientAuthenticationException("로그인 상태가 아닙니다.");
+        }
 
-        String encodeCurrentPassword = passwordEncoder.encode(passwordUpdateRequest.getCurrentPassword());
-        String encodeNewPassword = passwordEncoder.encode(passwordUpdateRequest.getNewPassword());
-        MemberPasswordChangeRequest encodeRequest = new MemberPasswordChangeRequest(encodeCurrentPassword,
-                                                                                    encodeNewPassword);
+        String userEmail = authentication.getName(); // JwtFilter나 HeaderFilter에서 set한 이메일
 
-        memberAdaptor.changeMemberPassword(Objects.requireNonNull(member).getMemberNo(), encodeRequest, userId);
+        MemberResponse member = memberAdaptor.getMemberByEmail(userEmail).getBody();
+
+        MemberPasswordChangeRequest encodeRequest = new MemberPasswordChangeRequest(passwordUpdateRequest.getCurrentPassword(),
+                                                                                    passwordUpdateRequest.getNewPassword());
+
+        memberAdaptor.changeMemberPassword(Objects.requireNonNull(member).getMemberNo(), encodeRequest, userEmail);
 
         return ResponseEntity.ok().build();
     }
@@ -168,21 +161,25 @@ public class AuthController {
                                             @PathVariable String companyDomain,
                                             @RequestBody CompanyUpdateEmailRequest emailRequest) throws AccessDeniedException {
 
-        String authenticatedEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new InsufficientAuthenticationException("로그인 상태가 아닙니다.");
+        }
 
-        String accessToken = jwtTokenProvider.resolveTokenFromCookie(request);
-        String roleId = jwtTokenProvider.getRoleIdFromToken(accessToken);
+        String userEmail = authentication.getName();
+        String userRole = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(GrantedAuthority::getAuthority)
+                .orElse(null);
 
-        if (!authenticatedEmail.equals(emailRequest.getCurrentEmail())) {
+        if (!userEmail.equals(emailRequest.getCurrentEmail())) {
             throw new AccessDeniedException("인증된 사용자와 요청한 이메일이 일치하지 않습니다.");
         }
-        if (!Objects.equals(roleId, "ROLE_OWNER")) {
+        if (!Objects.equals(userRole, "ROLE_OWNER")) {
             throw new AccessDeniedException("이메일 변경 권한이 없습니다.");
         }
 
         companyAdaptor.updateCompanyEmail(companyDomain, emailRequest);
         return ResponseEntity.ok().build();
     }
-
-
 }
