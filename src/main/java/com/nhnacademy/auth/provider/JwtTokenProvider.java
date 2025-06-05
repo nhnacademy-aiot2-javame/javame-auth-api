@@ -30,9 +30,9 @@ public class JwtTokenProvider {
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
 
     /**
-     * Access Token 유효 시간 (5분).
+     * Access Token 유효 시간 (10분).
      */
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 1;
+    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 10;
 
     /**
      * Refresh Token 유효 시간 (1시간 30분).
