@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nhnacademy.auth.exception.entrypoint.CustomAuthenticationEntryPoint;
+import com.nhnacademy.auth.filter.CustomHeaderAuthenticationFilter;
 import com.nhnacademy.auth.filter.JwtAuthenticationFilter;
 import com.nhnacademy.auth.member.adaptor.MemberAdaptor;
 import com.nhnacademy.auth.provider.JwtTokenProvider;
@@ -50,11 +51,13 @@ public class SecurityConfig {
      * @param http HttpSecurity
      * @param refreshTokenRepository refresh token 저장소
      * @param customAuthenticationEntryPoint 인증 에러 처리를 ExceptionHandler에서 처리할 수 있도록 설정한 custom entry point
+     * @param customHeaderAuthenticationFilter X-User-Role, X-User-Email을 SecurityContextHolder에 넣는 필터.
      * @return SecurityFilterChain
      * @throws Exception 예외 발생 시
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, RefreshTokenRepository refreshTokenRepository,
+                                           CustomHeaderAuthenticationFilter customHeaderAuthenticationFilter,
                                            CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -82,6 +85,7 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(customHeaderAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAt(jwtAuthenticationFilter
                                 (http.getSharedObject(AuthenticationManager.class), refreshTokenRepository),
                         UsernamePasswordAuthenticationFilter.class);

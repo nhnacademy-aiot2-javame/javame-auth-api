@@ -23,17 +23,40 @@ public class RefreshToken {
     @JsonProperty
     private String refreshToken;
 
+    /**
+     * 사용자를 대신하여 작업을 수행하는 소프트웨어. 특히 웹 브라우저 같은 클라이언트 소프트웨어를 의미합니다.
+     */
+    @JsonProperty
+    private String userAgent;
+
+    /**
+     * 사용자의 IP 주소입니다.
+     */
+    @JsonProperty
+    private String ip;
+
+
     public RefreshToken() {
         // NoArgsConstructor
     }
 
-    public RefreshToken(String id, String refreshToken) {
+    public RefreshToken(String id, String refreshToken, String userAgent, String ip) {
         this.id = id;
         this.refreshToken = refreshToken;
+        this.userAgent = userAgent;
+        this.ip = ip;
     }
 
     public String getId() {
         return id;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public String getIp() {
+        return ip;
     }
 
     public String getRefreshToken() {
