@@ -10,6 +10,7 @@
           <option value="X-Refresh-Token" />
           <option value="Refresh-Token" />
           <option value="X-User-Email" />
+          <option value="X-Refresh-Required" />
         </set>
       </option>
     </inspection_tool>

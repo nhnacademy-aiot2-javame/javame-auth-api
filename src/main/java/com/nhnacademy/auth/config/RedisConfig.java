@@ -9,7 +9,6 @@ import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
@@ -33,6 +32,12 @@ public class RedisConfig {
     private String password;
 
     /**
+     * Redis database index 번호입니다.
+     */
+    @Value("${spring.data.redis.database}")
+    private int redisDatabase;
+
+    /**
      *
      * @return Redis 서버와의 연결을 관리하는 팩토리를 반환합니다.
      */
@@ -41,6 +46,7 @@ public class RedisConfig {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(host);
         config.setPort(port);
+        config.setDatabase(redisDatabase);
         config.setPassword(RedisPassword.of(password));
 
         return new LettuceConnectionFactory(config);
@@ -60,13 +66,13 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory());
 
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
+        template.setValueSerializer(genericJackson2JsonRedisSerializer());
+        template.setDefaultSerializer(genericJackson2JsonRedisSerializer());
 
         template.setHashKeySerializer(genericJackson2JsonRedisSerializer());
         template.setHashValueSerializer(genericJackson2JsonRedisSerializer());
 
-        template.setDefaultSerializer(new StringRedisSerializer());
+        template.setDefaultSerializer(genericJackson2JsonRedisSerializer());
 
         return template;
     }

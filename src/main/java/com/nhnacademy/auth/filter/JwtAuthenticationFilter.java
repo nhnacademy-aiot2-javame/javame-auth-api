@@ -129,6 +129,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         log.info("--- Redis Key 생성 완료 ---");
         refreshTokenRepository.save(new RefreshToken(redisKey, jwtTokenDto.getRefreshToken(), userAgent, IpUtil.getClientIp(request)));
         log.info("--- Refresh Token 저장 ---");
+        log.info("Saved Redis Key: {}", redisKey);
 
         applicationEventPublisher.publishEvent(new LoginSuccessEvent(this, authResult.getName()));
 
