@@ -47,6 +47,6 @@ class RefreshTokenRepositoryTest {
 
         log.info("result: {}", result);
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(jwtTokenDto.getRefreshToken(), result.get().getRefreshToken());
+        Assertions.assertEquals(jwtTokenDto.getRefreshToken(), result.get().getToken());
     }
 }
