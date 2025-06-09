@@ -37,7 +37,7 @@ public class JwtTokenProvider {
     /**
      * Refresh Token 유효 시간 (1시간 30분).
      */
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 90;
+    private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 5;
 
     /**
      * java.io.Serializable: 객체를 파일로 저장하거나 네트워크를 통해 전송할 수 있도록 변환하는 인터페이스.

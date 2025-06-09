@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.AccessDeniedException;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  *  login, logout, signup 을 당담하는 Controller입니다.
@@ -113,7 +115,7 @@ public class AuthController {
     }
 
     @GetMapping("/refresh")
-    public ResponseEntity<JwtTokenDto> refresh(HttpServletRequest request) {
+    public ResponseEntity<JwtTokenDto> refresh(HttpServletRequest request, HttpServletResponse response) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new InsufficientAuthenticationException("로그인 상태가 아닙니다.");
@@ -123,14 +125,23 @@ public class AuthController {
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
                 .orElse(null);
+        String refreshTokenId = DigestUtils.sha256Hex(tokenPrefix + ":" + userEmail);
+
+        Optional<RefreshToken> optionalToken = refreshTokenRepository.findById(refreshTokenId);
+        if (optionalToken.isEmpty()) {
+            log.info("RefreshTokenRepository Not found : 유효한 Refresh Token이 아닙니다.");
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setHeader("X-Refresh-Required", "true");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
         JwtTokenDto jwtTokenDto = jwtTokenProvider.generateTokenDto(userEmail, userRole);
         RefreshToken savedToken = new RefreshToken(DigestUtils.sha256Hex(tokenPrefix + ":" + userEmail),
                 jwtTokenDto.getRefreshToken(),
                 request.getHeader("User-Agent"),
                 IpUtil.getClientIp(request));
+        log.info("--- new token provide and save ---");
         refreshTokenRepository.save(savedToken);
-
         return ResponseEntity.ok(jwtTokenDto);
     }
 

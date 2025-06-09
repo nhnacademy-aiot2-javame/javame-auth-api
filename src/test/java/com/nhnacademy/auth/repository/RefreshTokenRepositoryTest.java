@@ -45,7 +45,8 @@ class RefreshTokenRepositoryTest {
         refreshTokenRepository.save(refreshToken);
         Optional<RefreshToken> result = refreshTokenRepository.findById(redisKey);
 
+        log.info("result: {}", result);
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(jwtTokenDto.getRefreshToken(), result.get().getRefreshToken());
+        Assertions.assertEquals(jwtTokenDto.getRefreshToken(), result.get().getToken());
     }
 }
