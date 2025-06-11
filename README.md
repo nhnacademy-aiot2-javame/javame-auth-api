@@ -6,12 +6,10 @@
 구조도는 아래와 같습니다.
 </div>
 
-```
 
 ![image](https://github.com/user-attachments/assets/65048c0d-dea8-4c6e-85ce-6476288b4956)
 
 
-```
 
 <div align="center">
 <h3 tabindex="-1" class="heading-element" dir="auto">사용스택</h3>
