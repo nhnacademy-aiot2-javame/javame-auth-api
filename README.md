@@ -12,6 +12,11 @@
 ![image](https://github.com/user-attachments/assets/65048c0d-dea8-4c6e-85ce-6476288b4956)
 
 
+<h3 align="center" tabindex="-1" class="heading-element" dir="auto">SonarQube</h3>
+
+
+![스크린샷 2025-06-11 15-01-38](https://github.com/user-attachments/assets/0bfc62c0-ba0c-4cad-8031-34b75f5bef03)
+
 
 <div align="center">
 <h3 tabindex="-1" class="heading-element" dir="auto">사용스택</h3>
@@ -34,3 +39,5 @@
   <img src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white">
   <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black">
 </div>
+
+
